@@ -80,6 +80,9 @@ Cargo.lock
 
 # Temporary files
 tmp_*
+!tmp_rovodev_*.js
+!tmp_rovodev_*.py
+!tmp_rovodev_*.html
 temp_*
 *.tmp
 *.temp
@@ -106,8 +109,9 @@ error.log
 combined.log
 
 # Tauri specific
-/src-tauri/icons/*.png
-!/src-tauri/icons/icon.png
+# Keeping generated PNG icons for CI/CD
+# /src-tauri/icons/*.png
+# !/src-tauri/icons/icon.png
 
 # macOS
 .AppleDouble

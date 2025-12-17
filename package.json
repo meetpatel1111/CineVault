@@ -8,9 +8,12 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "generate-icons": "node tmp_rovodev_generate_icons.js"
+    "generate-icons": "node tmp_rovodev_generate_icons.js",
+    "generate-icns": "node tmp_rovodev_generate_icns.js",
+    "generate-all-icons": "npm run generate-icons && npm run generate-icns"
   },
   "dependencies": {
+    "png2icons": "^2.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

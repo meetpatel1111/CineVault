@@ -37,8 +37,8 @@ A privacy-first, offline-only media management and playback application.
 If you're developing on Linux, install these system packages:
 
 ```bash
-# Ubuntu/Debian
-sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+# Ubuntu/Debian (22.04+)
+sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
 # Fedora
 sudo dnf install gtk3-devel webkit2gtk3-devel libappindicator-gtk3-devel librsvg2-devel
