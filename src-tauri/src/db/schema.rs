@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS playlists (
     metadata_json TEXT  -- Additional metadata
 );
 
-CREATE INDEX IF NOT EXISTS idx_playlists_type ON playlists(type);
+CREATE INDEX IF NOT EXISTS idx_playlists_type ON playlists(playlist_type);
 
 -- Playlist items: Media files in playlists
 CREATE TABLE IF NOT EXISTS playlist_items (
