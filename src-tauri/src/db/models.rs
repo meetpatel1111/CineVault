@@ -119,49 +119,6 @@ pub struct PlaybackState {
     pub created_at: String,
 }
 
-/// Playlist record
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Playlist {
-    pub id: Option<i64>,
-    pub name: String,
-    pub description: Option<String>,
-    pub playlist_type: PlaylistType,
-    pub created_at: String,
-    pub updated_at: String,
-    pub thumbnail_path: Option<String>,
-    pub metadata_json: Option<String>,
-}
-
-#[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum PlaylistType {
-    Manual,
-    Smart,
-    Auto,
-}
-
-impl PlaylistType {
-    #[allow(dead_code)]
-    pub fn as_str(&self) -> &str {
-        match self {
-            PlaylistType::Manual => "manual",
-            PlaylistType::Smart => "smart",
-            PlaylistType::Auto => "auto",
-        }
-    }
-    
-    #[allow(dead_code)]
-    pub fn from_str(s: &str) -> Option<Self> {
-        match s {
-            "manual" => Some(PlaylistType::Manual),
-            "smart" => Some(PlaylistType::Smart),
-            "auto" => Some(PlaylistType::Auto),
-            _ => None,
-        }
-    }
-}
 
 /// Collection record
 #[allow(dead_code)]

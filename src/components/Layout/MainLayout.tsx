@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import './MainLayout.css';
@@ -16,7 +16,20 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   onFilterChange,
   currentFilter = 'all'
 }) => {
-  const [activeSection, setActiveSection] = useState('home');
+  // Map filter to section for initial state
+  const filterToSection: Record<'all' | 'movie' | 'tv' | 'music', string> = {
+    'all': 'home',
+    'movie': 'movies',
+    'tv': 'tv',
+    'music': 'music',
+  };
+  
+  const [activeSection, setActiveSection] = useState(filterToSection[currentFilter]);
+
+  // Sync active section when currentFilter changes from parent
+  useEffect(() => {
+    setActiveSection(filterToSection[currentFilter]);
+  }, [currentFilter]);
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);

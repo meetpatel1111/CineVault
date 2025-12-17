@@ -63,8 +63,10 @@ pub fn get_playlist_by_id(conn: &Connection, playlist_id: i64) -> Result<Option<
             id: Some(row.get(0)?),
             name: row.get(1)?,
             description: row.get(2)?,
-            playlist_type: PlaylistType::from_str(&row.get::<_, String>(3)?)
-                .unwrap_or(PlaylistType::Manual),
+            playlist_type: {
+                let type_str: String = row.get(3)?;
+                PlaylistType::from_str(&type_str).unwrap_or(PlaylistType::Manual)
+            },
             created_at: row.get(4)?,
             updated_at: row.get(5)?,
             thumbnail_path: row.get(6)?,

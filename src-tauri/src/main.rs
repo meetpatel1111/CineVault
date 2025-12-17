@@ -110,7 +110,7 @@ async fn scan_directory(
             bitrate: metadata.as_ref().and_then(|m| m.bitrate).map(|b| b as i64),
             framerate: metadata.as_ref().and_then(|m| m.framerate),
             audio_codec: metadata.as_ref().and_then(|m| m.audio_codec.clone()),
-            audio_channels: metadata.as_ref().and_then(|m| m.audio_channels).map(|c| c as i64),
+            audio_channels: metadata.as_ref().and_then(|m| m.audio_channels).map(|c| c as i32),
             title: Some(title),
             year: year.map(|y| y as i32),
             season_number,
@@ -295,7 +295,7 @@ async fn extract_metadata(
         bitrate: metadata.bitrate.map(|b| b as i64),
         framerate: metadata.framerate,
         audio_codec: metadata.audio_codec.clone(),
-        audio_channels: metadata.audio_channels.map(|c| c as i64),
+        audio_channels: metadata.audio_channels.map(|c| c as i32),
         ..media
     };
     
@@ -615,7 +615,7 @@ async fn extract_all_metadata(
                     bitrate: metadata.bitrate.map(|b| b as i64),
                     framerate: metadata.framerate,
                     audio_codec: metadata.audio_codec.clone(),
-                    audio_channels: metadata.audio_channels.map(|c| c as i64),
+                    audio_channels: metadata.audio_channels.map(|c| c as i32),
                     ..media
                 };
                 
