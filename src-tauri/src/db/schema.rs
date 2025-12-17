@@ -133,6 +133,7 @@ CREATE TABLE IF NOT EXISTS collections (
     description TEXT,
     type TEXT,  -- e.g., 'franchise', 'series', 'custom'
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     poster_path TEXT,
     metadata_json TEXT
 );
@@ -152,18 +153,21 @@ CREATE TABLE IF NOT EXISTS collection_items (
 CREATE INDEX IF NOT EXISTS idx_collection_items_collection ON collection_items(collection_id);
 
 -- Subtitles: Track external subtitle files
-CREATE TABLE IF NOT EXISTS subtitles (
+CREATE TABLE IF NOT EXISTS subtitle_tracks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     media_id INTEGER NOT NULL,
     file_path TEXT NOT NULL,
     language TEXT,
-    format TEXT,  -- e.g., 'srt', 'ass', 'vtt'
-    is_default INTEGER NOT NULL DEFAULT 0,
+    label TEXT,
+    codec TEXT,
+    is_embedded INTEGER NOT NULL DEFAULT 0,
+    track_index INTEGER,
+    added_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (media_id) REFERENCES media_files(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_subtitles_media ON subtitles(media_id);
+CREATE INDEX IF NOT EXISTS idx_subtitle_tracks_media ON subtitle_tracks(media_id);
 
 -- Audio tracks: Track external audio files
 CREATE TABLE IF NOT EXISTS audio_tracks (
