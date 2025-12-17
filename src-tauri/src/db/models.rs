@@ -1,5 +1,45 @@
 use serde::{Deserialize, Serialize};
 
+/// Playlist type enumeration
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum PlaylistType {
+    Manual,
+    Smart,
+    Auto,
+}
+
+impl PlaylistType {
+    pub fn as_str(&self) -> &str {
+        match self {
+            PlaylistType::Manual => "manual",
+            PlaylistType::Smart => "smart",
+            PlaylistType::Auto => "auto",
+        }
+    }
+    
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "manual" => Some(PlaylistType::Manual),
+            "smart" => Some(PlaylistType::Smart),
+            "auto" => Some(PlaylistType::Auto),
+            _ => None,
+        }
+    }
+}
+
+/// Represents a playlist in the database
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Playlist {
+    pub id: Option<i64>,
+    pub name: String,
+    pub description: Option<String>,
+    pub playlist_type: PlaylistType,
+    pub created_at: String,
+    pub updated_at: String,
+    pub thumbnail_path: Option<String>,
+    pub metadata_json: Option<String>,
+}
+
 /// Media file record
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MediaFile {

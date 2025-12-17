@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::path::Path;
+use std::process::Command;
 
 /// Media metadata extracted from files
 #[allow(dead_code)]
@@ -17,14 +18,119 @@ pub struct MediaMetadata {
 }
 
 impl MediaMetadata {
-    /// Extract metadata from a media file
-    /// Note: This is a placeholder. In a real implementation, you would use
-    /// FFmpeg, libVLC, or similar to extract actual metadata.
+    /// Extract metadata from a media file using ffprobe
+    /// Requires ffprobe to be installed and available in PATH
     #[allow(dead_code)]
-    pub fn extract_from_file<P: AsRef<Path>>(_path: P) -> Result<Self, MetadataError> {
-        // TODO: Implement actual metadata extraction using FFmpeg or similar
-        // For now, return default metadata
-        Ok(Self::default())
+    pub fn extract_from_file<P: AsRef<Path>>(path: P) -> Result<Self, MetadataError> {
+        let path = path.as_ref();
+        
+        // Check if file exists
+        if !path.exists() {
+            return Err(MetadataError::FileNotFound(
+                path.display().to_string()
+            ));
+        }
+        
+        // Try to extract metadata using ffprobe
+        match Self::extract_with_ffprobe(path) {
+            Ok(metadata) => Ok(metadata),
+            Err(e) => {
+                // If ffprobe fails, log the error and return default metadata
+                eprintln!("FFprobe extraction failed: {}. Returning default metadata.", e);
+                Ok(Self::default())
+            }
+        }
+    }
+    
+    /// Extract metadata using ffprobe command
+    fn extract_with_ffprobe(path: &Path) -> Result<Self, MetadataError> {
+        // Run ffprobe with JSON output
+        let output = Command::new("ffprobe")
+            .args(&[
+                "-v", "quiet",
+                "-print_format", "json",
+                "-show_format",
+                "-show_streams",
+                path.to_str().ok_or_else(|| MetadataError::ExtractionFailed(
+                    "Invalid path encoding".to_string()
+                ))?
+            ])
+            .output()
+            .map_err(|e| MetadataError::ExtractionFailed(
+                format!("Failed to run ffprobe: {}. Make sure ffprobe is installed and in PATH.", e)
+            ))?;
+        
+        if !output.status.success() {
+            return Err(MetadataError::ExtractionFailed(
+                format!("ffprobe failed with status: {}", output.status)
+            ));
+        }
+        
+        // Parse JSON output
+        let json_str = String::from_utf8(output.stdout)
+            .map_err(|e| MetadataError::ExtractionFailed(
+                format!("Invalid UTF-8 in ffprobe output: {}", e)
+            ))?;
+        
+        let probe_data: FFProbeOutput = serde_json::from_str(&json_str)
+            .map_err(|e| MetadataError::ExtractionFailed(
+                format!("Failed to parse ffprobe JSON: {}", e)
+            ))?;
+        
+        // Extract metadata from probe data
+        Ok(Self::from_ffprobe(probe_data))
+    }
+    
+    /// Convert FFProbe output to MediaMetadata
+    fn from_ffprobe(probe: FFProbeOutput) -> Self {
+        let mut metadata = Self::default();
+        
+        // Get duration from format
+        if let Some(format) = probe.format {
+            if let Some(duration_str) = format.duration {
+                if let Ok(duration_f64) = duration_str.parse::<f64>() {
+                    metadata.duration = Some(duration_f64 as u64);
+                }
+            }
+            
+            if let Some(bitrate_str) = format.bit_rate {
+                if let Ok(bitrate) = bitrate_str.parse::<u64>() {
+                    metadata.bitrate = Some(bitrate / 1000); // Convert to kbps
+                }
+            }
+        }
+        
+        // Find video and audio streams
+        for stream in probe.streams {
+            match stream.codec_type.as_deref() {
+                Some("video") => {
+                    metadata.width = stream.width;
+                    metadata.height = stream.height;
+                    metadata.codec = stream.codec_name;
+                    
+                    // Parse framerate from avg_frame_rate (e.g., "24000/1001")
+                    if let Some(fps_str) = stream.avg_frame_rate {
+                        if let Some((num, den)) = fps_str.split_once('/') {
+                            if let (Ok(n), Ok(d)) = (num.parse::<f64>(), den.parse::<f64>()) {
+                                if d != 0.0 {
+                                    metadata.framerate = Some(n / d);
+                                }
+                            }
+                        }
+                    }
+                }
+                Some("audio") => {
+                    if metadata.audio_codec.is_none() {
+                        metadata.audio_codec = stream.codec_name;
+                        metadata.audio_channels = stream.channels;
+                        metadata.sample_rate = stream.sample_rate.and_then(|s| s.parse().ok());
+                    }
+                }
+                _ => {}
+            }
+        }
+        
+        metadata
     }
 
     /// Get resolution as a string (e.g., "1920x1080")
@@ -70,6 +176,32 @@ pub enum MetadataError {
 
     #[error("Extraction failed: {0}")]
     ExtractionFailed(String),
+}
+
+/// FFProbe JSON output structure
+#[derive(Debug, Deserialize)]
+struct FFProbeOutput {
+    streams: Vec<FFProbeStream>,
+    format: Option<FFProbeFormat>,
+}
+
+/// FFProbe stream information
+#[derive(Debug, Deserialize)]
+struct FFProbeStream {
+    codec_type: Option<String>,
+    codec_name: Option<String>,
+    width: Option<u32>,
+    height: Option<u32>,
+    avg_frame_rate: Option<String>,
+    channels: Option<u32>,
+    sample_rate: Option<String>,
+}
+
+/// FFProbe format information
+#[derive(Debug, Deserialize)]
+struct FFProbeFormat {
+    duration: Option<String>,
+    bit_rate: Option<String>,
 }
 
 /// Parse title and year from filename

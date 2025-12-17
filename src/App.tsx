@@ -82,7 +82,10 @@ function App() {
   const [scanning, setScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState<ScanProgress | null>(null);
   const [mediaItems, setMediaItems] = useState<any[]>(mockMediaItems);
+  const [filteredMediaItems, setFilteredMediaItems] = useState<any[]>(mockMediaItems);
   const [playingMedia, setPlayingMedia] = useState<any | null>(null);
+  const [currentFilter, setCurrentFilter] = useState<'all' | 'movie' | 'tv' | 'music'>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const { toasts, removeToast, success, error, info } = useToast();
 
   async function loadDbStats() {
@@ -100,12 +103,44 @@ function App() {
     try {
       const files = await mediaService.getAllMedia();
       const displayItems = files.map(f => mediaService.toDisplayFormat(f));
-      setMediaItems(displayItems.length > 0 ? displayItems : mockMediaItems);
+      const items = displayItems.length > 0 ? displayItems : mockMediaItems;
+      setMediaItems(items);
+      setFilteredMediaItems(items);
     } catch (err) {
       console.error("Failed to load media:", err);
       error("Failed to load media library");
     }
   }
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    applyFilters(query, currentFilter);
+  };
+
+  const handleFilterChange = (filter: 'all' | 'movie' | 'tv' | 'music') => {
+    setCurrentFilter(filter);
+    applyFilters(searchQuery, filter);
+  };
+
+  const applyFilters = (query: string, filter: 'all' | 'movie' | 'tv' | 'music') => {
+    let filtered = [...mediaItems];
+
+    // Apply type filter
+    if (filter !== 'all') {
+      filtered = filtered.filter(item => item.type === filter);
+    }
+
+    // Apply search query
+    if (query.trim()) {
+      const lowerQuery = query.toLowerCase();
+      filtered = filtered.filter(item => 
+        item.title?.toLowerCase().includes(lowerQuery) ||
+        item.year?.toString().includes(query)
+      );
+    }
+
+    setFilteredMediaItems(filtered);
+  };
 
   useEffect(() => {
     loadDbStats();
@@ -227,7 +262,11 @@ function App() {
 
   return (
     <>
-      <MainLayout>
+      <MainLayout 
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        currentFilter={currentFilter}
+      >
         <div className="app-content">
           <section className="app-section">
             <div className="app-section-header">
@@ -273,31 +312,38 @@ function App() {
             </div>
           </section>
 
-          <section className="app-section">
-            <div className="app-section-header">
-              <h2 className="app-section-title">Continue Watching</h2>
-              <Badge variant="warning">
-                {mediaItems.filter(item => item.progress && item.progress > 0).length} in progress
-              </Badge>
-            </div>
-            <MediaGrid
-              items={mediaItems.filter(item => item.progress && item.progress > 0)}
-              onItemClick={handleMediaClick}
-              emptyMessage="No items in progress"
-            />
-          </section>
+          {!searchQuery && currentFilter === 'all' && (
+            <section className="app-section">
+              <div className="app-section-header">
+                <h2 className="app-section-title">Continue Watching</h2>
+                <Badge variant="warning">
+                  {mediaItems.filter(item => item.progress && item.progress > 0).length} in progress
+                </Badge>
+              </div>
+              <MediaGrid
+                items={mediaItems.filter(item => item.progress && item.progress > 0)}
+                onItemClick={handleMediaClick}
+                emptyMessage="No items in progress"
+              />
+            </section>
+          )}
 
           <section className="app-section">
             <div className="app-section-header">
-              <h2 className="app-section-title">Recently Added</h2>
+              <h2 className="app-section-title">
+                {searchQuery ? `Search Results: "${searchQuery}"` : 
+                 currentFilter === 'all' ? 'Recently Added' : 
+                 currentFilter === 'movie' ? 'Movies' :
+                 currentFilter === 'tv' ? 'TV Shows' : 'Music'}
+              </h2>
               <Badge variant="success">
-                {mediaItems.length} items
+                {filteredMediaItems.length} items
               </Badge>
             </div>
             <MediaGrid
-              items={mediaItems}
+              items={filteredMediaItems}
               onItemClick={handleMediaClick}
-              emptyMessage="No media in your library yet. Click 'Scan Library' to get started!"
+              emptyMessage={searchQuery ? "No results found" : "No media in your library yet. Click 'Scan Library' to get started!"}
             />
           </section>
         </div>

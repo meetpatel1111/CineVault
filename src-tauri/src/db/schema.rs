@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS playlists (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     description TEXT,
-    type TEXT NOT NULL CHECK(type IN ('manual', 'smart', 'auto')),
+    playlist_type TEXT NOT NULL CHECK(playlist_type IN ('manual', 'smart', 'auto')),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     thumbnail_path TEXT,
