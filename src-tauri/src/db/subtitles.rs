@@ -16,6 +16,7 @@ pub struct SubtitleTrack {
 }
 
 /// Add a subtitle track
+#[allow(clippy::too_many_arguments)]
 pub fn add_subtitle_track(
     conn: &Connection,
     media_id: i64,
@@ -76,6 +77,7 @@ pub fn remove_subtitle_track(conn: &Connection, subtitle_id: i64) -> Result<()> 
 }
 
 /// Get subtitle track by ID
+#[allow(dead_code)]
 pub fn get_subtitle_track_by_id(conn: &Connection, subtitle_id: i64) -> Result<Option<SubtitleTrack>> {
     let mut stmt = conn.prepare(
         "SELECT id, media_id, file_path, language, label, codec, is_embedded, track_index, added_at
@@ -117,7 +119,7 @@ pub fn discover_subtitle_files(media_path: &str) -> Result<Vec<String>> {
         None => return Ok(vec![]),
     };
     
-    let subtitle_extensions = vec!["srt", "vtt", "ass", "ssa", "sub", "idx"];
+    let subtitle_extensions = ["srt", "vtt", "ass", "ssa", "sub", "idx"];
     let mut subtitle_files = Vec::new();
     
     if let Ok(entries) = std::fs::read_dir(parent_dir) {

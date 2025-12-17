@@ -314,6 +314,7 @@ async fn extract_metadata(
 
 // Subtitle commands
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 fn add_subtitle_track(
     media_id: i64,
     file_path: String,

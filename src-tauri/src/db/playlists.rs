@@ -21,6 +21,7 @@ pub fn create_playlist(
 }
 
 /// Get all playlists
+#[allow(dead_code)]
 pub fn get_all_playlists(conn: &Connection) -> Result<Vec<Playlist>> {
     let mut stmt = conn.prepare(
         "SELECT id, name, description, playlist_type, created_at, updated_at, 
@@ -48,6 +49,7 @@ pub fn get_all_playlists(conn: &Connection) -> Result<Vec<Playlist>> {
 }
 
 /// Get a playlist by ID
+#[allow(dead_code)]
 pub fn get_playlist_by_id(conn: &Connection, playlist_id: i64) -> Result<Option<Playlist>> {
     let mut stmt = conn.prepare(
         "SELECT id, name, description, playlist_type, created_at, updated_at,
@@ -208,6 +210,7 @@ pub fn get_playlist_media(conn: &Connection, playlist_id: i64) -> Result<Vec<Pla
 }
 
 /// Reorder a playlist item
+#[allow(dead_code)]
 pub fn reorder_playlist_item(
     conn: &Connection,
     playlist_id: i64,

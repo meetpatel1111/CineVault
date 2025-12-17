@@ -2,6 +2,7 @@ use rusqlite::{Connection, Result, params};
 use chrono::Utc;
 
 /// Collection model
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Collection {
     pub id: Option<i64>,
@@ -31,6 +32,7 @@ pub fn create_collection(
 }
 
 /// Get all collections
+#[allow(dead_code)]
 pub fn get_all_collections(conn: &Connection) -> Result<Vec<Collection>> {
     let mut stmt = conn.prepare(
         "SELECT id, name, description, created_at, updated_at, poster_path, metadata_json
@@ -55,6 +57,7 @@ pub fn get_all_collections(conn: &Connection) -> Result<Vec<Collection>> {
 }
 
 /// Get a collection by ID
+#[allow(dead_code)]
 pub fn get_collection_by_id(conn: &Connection, collection_id: i64) -> Result<Option<Collection>> {
     let mut stmt = conn.prepare(
         "SELECT id, name, description, created_at, updated_at, poster_path, metadata_json

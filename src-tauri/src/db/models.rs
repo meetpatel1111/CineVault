@@ -17,6 +17,7 @@ impl PlaylistType {
         }
     }
     
+    #[allow(dead_code)]
     pub fn from_str(s: &str) -> Option<Self> {
         match s.to_lowercase().as_str() {
             "manual" => Some(PlaylistType::Manual),
@@ -28,6 +29,7 @@ impl PlaylistType {
 }
 
 /// Represents a playlist in the database
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Playlist {
     pub id: Option<i64>,

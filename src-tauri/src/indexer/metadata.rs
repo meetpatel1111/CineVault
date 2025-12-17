@@ -46,7 +46,7 @@ impl MediaMetadata {
     fn extract_with_ffprobe(path: &Path) -> Result<Self, MetadataError> {
         // Run ffprobe with JSON output
         let output = Command::new("ffprobe")
-            .args(&[
+            .args([
                 "-v", "quiet",
                 "-print_format", "json",
                 "-show_format",
