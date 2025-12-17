@@ -32,3 +32,12 @@ impl Database {
         super::migrations::run_migrations(&conn)
     }
 }
+
+#[cfg(test)]
+/// Initialize an in-memory database for testing
+pub fn init_db() -> Result<Connection> {
+    let conn = Connection::open_in_memory()?;
+    conn.pragma_update(None, "foreign_keys", "ON")?;
+    super::migrations::run_migrations(&conn)?;
+    Ok(conn)
+}

@@ -2,7 +2,7 @@
 /// 
 /// Currently uses HTML5 video/audio through the frontend.
 /// Future: Integrate FFmpeg or libVLC for advanced codec support.
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 /// Player state
 #[allow(dead_code)]

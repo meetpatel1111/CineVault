@@ -112,6 +112,12 @@ pub fn get_all_media_files(conn: &Connection) -> Result<Vec<MediaFile>> {
     media_iter.collect()
 }
 
+#[cfg(test)]
+/// Add a media file to the database (test helper)
+pub fn add_media_file(conn: &Connection, media: &MediaFile) -> Result<i64> {
+    upsert_media_file(conn, media)
+}
+
 /// Get media files by type
 pub fn get_media_by_type(conn: &Connection, media_type: MediaType) -> Result<Vec<MediaFile>> {
     let media_type_str = media_type.as_str();

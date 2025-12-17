@@ -668,7 +668,7 @@ struct BatchMetadataResult {
     errors: usize,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 struct MetadataProgress {
     current: usize,
     total: usize,
