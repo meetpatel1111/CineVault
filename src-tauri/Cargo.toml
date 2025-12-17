@@ -1,0 +1,24 @@
+[package]
+name = "cinevault"
+version = "0.1.0"
+description = "A privacy-first, offline-only media management and playback application"
+authors = ["CineVault Team"]
+license = ""
+repository = ""
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+tauri = { version = "1.5", features = ["shell-open", "dialog-all", "fs-all", "path-all"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rusqlite = { version = "0.31", features = ["bundled"] }
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1.0"
+sha2 = "0.10"
+regex = "1.10"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]

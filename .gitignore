@@ -1,0 +1,129 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist
+dist-ssr
+build
+out
+
+# Cache directories
+.cache
+.parcel-cache
+.vite
+.turbo
+
+# Environment files
+*.local
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# OS files
+Thumbs.db
+Desktop.ini
+.AppleDouble
+.LSOverride
+
+# Rust
+/target
+Cargo.lock
+
+# Tauri
+/src-tauri/target
+/src-tauri/WixTools
+/src-tauri/gen
+
+# Database files (local development)
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Media files (don't commit test media)
+/test-media
+/sample-media
+*.mp4
+*.mkv
+*.avi
+*.mov
+*.mp3
+*.flac
+*.wav
+
+# Temporary files
+tmp_*
+temp_*
+*.tmp
+*.temp
+
+# Build artifacts
+*.dmg
+*.app
+*.exe
+*.msi
+*.deb
+*.rpm
+*.AppImage
+*.tar.gz
+
+# Coverage and test reports
+coverage
+.nyc_output
+test-results
+junit.xml
+
+# Debug files
+debug.log
+error.log
+combined.log
+
+# Tauri specific
+/src-tauri/icons/*.png
+!/src-tauri/icons/icon.png
+
+# macOS
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
