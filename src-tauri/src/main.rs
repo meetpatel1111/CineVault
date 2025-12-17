@@ -224,7 +224,7 @@ fn get_playback_state(
     let conn = conn.lock().unwrap();
     
     db::get_playback_state(&conn, media_id)
-        .map_err(|e| e.to_string())
+        .map_err(|e: rusqlite::Error| e.to_string())
 }
 
 #[tauri::command]

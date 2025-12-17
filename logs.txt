@@ -1,317 +1,91 @@
-# Linux build logs
-   Compiling iana-time-zone v0.1.64
-   Compiling fallible-iterator v0.3.0
-   Compiling fallible-streaming-iterator v0.1.9
-   Compiling state v0.5.3
+# macos logs 
    Compiling chrono v0.4.42
    Compiling rusqlite v0.31.0
+error[E0412]: cannot find type `PlaybackState` in this scope
+  --> src/db/playback.rs:40:78
+   |
+40 | pub fn get_playback_state(conn: &Connection, media_id: i64) -> Result<Option<PlaybackState>> {
+   |                                                                              ^^^^^^^^^^^^^ not found in this scope
+   |
+help: consider importing this struct through its public re-export
+   |
+ 1 + use crate::db::PlaybackState;
+   |
+
+error[E0422]: cannot find struct, variant or union type `PlaybackState` in this scope
+  --> src/db/playback.rs:48:12
+   |
+48 |         Ok(PlaybackState {
+   |            ^^^^^^^^^^^^^ not found in this scope
+   |
+help: consider importing this struct through its public re-export
+   |
+ 1 + use crate::db::PlaybackState;
+   |
+
+error[E0282]: type annotations needed
+   --> src/main.rs:227:19
+    |
+227 |         .map_err(|e| e.to_string())
+    |                   ^  - type must be known at this point
+    |
+help: consider giving this closure parameter an explicit type
+    |
+227 |         .map_err(|e: /* Type */| e.to_string())
+    |                    ++++++++++++
+
+Some errors have detailed explanations: E0282, E0412, E0422.
+For more information about an error, try `rustc --explain E0282`.
+error: could not compile `cinevault` (bin "cinevault") due to 3 previous errors
+       Error failed to build app: failed to build app
+Error: Command "npm ["run","tauri","build"]" failed with exit code 1
+
+# Windows logs
+   Compiling rusqlite v0.31.0
+   Compiling chrono v0.4.42
 error: proc macro panicked
-   --> src/main.rs:307:14
+   --> src\main.rs:307:14
     |
 307 |         .run(tauri::generate_context!())
     |              ^^^^^^^^^^^^^^^^^^^^^^^^^^
     |
-    = help: message: failed to read icon /home/runner/work/CineVault/CineVault/src-tauri/icons/32x32.png: No such file or directory (os error 2)
+    = help: message: failed to parse icon D:\a\CineVault\CineVault\src-tauri\icons/icon.ico: failed to fill whole buffer
 
-error[E0659]: `PlaybackState` is ambiguous
-   --> src/main.rs:221:24
-    |
-221 | ) -> Result<Option<db::PlaybackState>, String> {
-    |                        ^^^^^^^^^^^^^ ambiguous name
-    |
-    = note: ambiguous because of multiple glob imports of a name in the same module
-note: `PlaybackState` could refer to the struct imported here
-   --> src/db/mod.rs:12:9
-    |
- 12 | pub use models::*;
-    |         ^^^^^^^^^
-    = help: consider adding an explicit import of `PlaybackState` to disambiguate
-note: `PlaybackState` could also refer to the struct imported here
-   --> src/db/mod.rs:14:9
-    |
- 14 | pub use playback::*;
-    |         ^^^^^^^^^^^
-    = help: consider adding an explicit import of `PlaybackState` to disambiguate
+error[E0412]: cannot find type `PlaybackState` in this scope
+  --> src\db\playback.rs:40:78
+   |
+40 | pub fn get_playback_state(conn: &Connection, media_id: i64) -> Result<Option<PlaybackState>> {
+   |                                                                              ^^^^^^^^^^^^^ not found in this scope
+   |
+help: consider importing this struct through its public re-export
+   |
+ 1 + use crate::db::PlaybackState;
+   |
 
-warning: unused import: `SCHEMA_VERSION`
- --> src/db/migrations.rs:2:47
-  |
-2 | use super::schema::{CORE_SCHEMA, TMDB_SCHEMA, SCHEMA_VERSION};
-  |                                               ^^^^^^^^^^^^^^
-  |
-  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+error[E0422]: cannot find struct, variant or union type `PlaybackState` in this scope
+  --> src\db\playback.rs:48:12
+   |
+48 |         Ok(PlaybackState {
+   |            ^^^^^^^^^^^^^ not found in this scope
+   |
+help: consider importing this struct through its public re-export
+   |
+ 1 + use crate::db::PlaybackState;
+   |
 
-warning: unused import: `chrono::Utc`
- --> src/db/operations.rs:2:5
-  |
-2 | use chrono::Utc;
-  |     ^^^^^^^^^^^
+error[E0282]: type annotations needed
+   --> src\main.rs:227:19
+    |
+227 |         .map_err(|e| e.to_string())
+    |                   ^  - type must be known at this point
+    |
+help: consider giving this closure parameter an explicit type
+    |
+227 |         .map_err(|e: /* Type */| e.to_string())
+    |                    ++++++++++++
 
-warning: unused import: `metadata::MediaMetadata`
- --> src/indexer/mod.rs:6:9
-  |
-6 | pub use metadata::MediaMetadata;
-  |         ^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0308]: mismatched types
-   --> src/main.rs:226:5
-    |
-221 |   ) -> Result<Option<db::PlaybackState>, String> {
-    |        ----------------------------------------- expected `Result<std::option::Option<models::PlaybackState>, std::string::String>` because of return type
-...
-226 | /     db::get_playback_state(&conn, media_id)
-227 | |         .map_err(|e| e.to_string())
-    | |___________________________________^ expected `models::PlaybackState`, found `playback::PlaybackState`
-    |
-    = note: `playback::PlaybackState` and `models::PlaybackState` have similar names, but are actually distinct types
-note: `playback::PlaybackState` is defined in module `crate::db::playback` of the current crate
-   --> src/db/playback.rs:186:1
-    |
-186 | pub struct PlaybackState {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^
-note: `models::PlaybackState` is defined in module `crate::db::models` of the current crate
-   --> src/db/models.rs:72:1
-    |
- 72 | pub struct PlaybackState {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: unused import: `Manager`
- --> src/main.rs:9:20
-  |
-9 | use tauri::{State, Manager};
-  |                    ^^^^^^^
-
-error[E0507]: cannot move out of `media_type`, a captured variable in an `FnMut` closure
-   --> src/db/operations.rs:139:13
-    |
-117 | pub fn get_media_by_type(conn: &Connection, media_type: MediaType) -> Result<Vec<MediaFile>> {
-    |                                             ----------  --------- move occurs because `media_type` has type `models::MediaType`, which does not implement the `Copy` trait
-    |                                             |
-    |                                             captured outer variable
-...
-132 |     let media_iter = stmt.query_map([media_type_str], |row| {
-    |                                                       ----- captured by this `FnMut` closure
-...
-139 |             media_type,
-    |             ^^^^^^^^^^ `media_type` is moved here
-    |
-help: `Fn` and `FnMut` closures require captured values to be able to be consumed multiple times, but `FnOnce` closures may consume them only once
-   --> /home/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rusqlite-0.31.0/src/statement.rs:281:12
-    |
-281 |         F: FnMut(&Row<'_>) -> Result<T>,
-    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-help: consider cloning the value if the performance cost is acceptable
-    |
-139 |             media_type: media_type.clone(),
-    |                       ++++++++++++++++++++
-
-error[E0505]: cannot move out of `media_type` because it is borrowed
-   --> src/db/operations.rs:132:55
-    |
-117 | pub fn get_media_by_type(conn: &Connection, media_type: MediaType) -> Result<Vec<MediaFile>> {
-    |                                             ---------- binding `media_type` declared here
-118 |     let media_type_str = media_type.as_str();
-    |                          ---------- borrow of `media_type` occurs here
-...
-132 |     let media_iter = stmt.query_map([media_type_str], |row| {
-    |                           ---------                   ^^^^^ move out of `media_type` occurs here
-    |                           |
-    |                           borrow later used by call
-...
-139 |             media_type,
-    |             ---------- move occurs due to use in closure
-    |
-help: consider cloning the value if the performance cost is acceptable
-    |
-118 |     let media_type_str = media_type.clone().as_str();
-    |                                    ++++++++
-
-error[E0382]: use of moved value
-   --> src/indexer/metadata.rs:102:29
-    |
- 93 |     let year = if let Some(re) = year_pattern {
-    |                            -- value moved here
-...
-102 |     let title = if let Some(re) = year_pattern {
-    |                             ^^ value used here after move
-    |
-    = note: move occurs because value has type `regex::Regex`, which does not implement the `Copy` trait
-help: borrow this binding in the pattern to avoid moving the value
-    |
- 93 |     let year = if let Some(ref re) = year_pattern {
-    |                            +++
-
-Some errors have detailed explanations: E0308, E0382, E0505, E0507, E0659.
-For more information about an error, try `rustc --explain E0308`.
-warning: `cinevault` (bin "cinevault") generated 4 warnings
-error: could not compile `cinevault` (bin "cinevault") due to 6 previous errors; 4 warnings emitted
-       Error failed to build app: failed to build app
-Error: Command "npm ["run","tauri","build"]" failed with exit code 1
-
-# Windows Build Logs
-   Compiling encoding_rs v0.8.35
-   Compiling bitflags v2.10.0
-   Compiling fallible-iterator v0.3.0
-   Compiling fallible-streaming-iterator v0.1.9
-   Compiling state v0.5.3
-   Compiling rusqlite v0.31.0
-   Compiling chrono v0.4.42
-error: failed to run custom build command for `cinevault v0.1.0 (D:\a\CineVault\CineVault\src-tauri)`
-
-Caused by:
-  process didn't exit successfully: `D:\a\CineVault\CineVault\src-tauri\target\release\build\cinevault-9980d116108752cb\build-script-build` (exit code: 1)
-  --- stdout
-  cargo:rerun-if-env-changed=TAURI_CONFIG
-  cargo:rerun-if-changed=tauri.conf.json
-  cargo:rustc-check-cfg=cfg(desktop)
-  cargo:rustc-cfg=desktop
-  cargo:rustc-check-cfg=cfg(mobile)
-  cargo:rustc-check-cfg=cfg(dev)
-  `icons/icon.ico` not found; required for generating a Windows Resource file during tauri-build
-warning: build failed, waiting for other jobs to finish...
-       Error failed to build app: failed to build app
-Error: Command "npm ["run","tauri","build"]" failed with exit code 1
-
-# macos build logs
-   Compiling serde_repr v0.1.20
-   Compiling encoding_rs v0.8.35
-   Compiling state v0.5.3
-   Compiling embed_plist v1.2.2
-   Compiling fallible-streaming-iterator v0.1.9
-   Compiling fallible-iterator v0.3.0
-   Compiling chrono v0.4.42
-   Compiling rusqlite v0.31.0
-error[E0659]: `PlaybackState` is ambiguous
-   --> src/main.rs:221:24
-    |
-221 | ) -> Result<Option<db::PlaybackState>, String> {
-    |                        ^^^^^^^^^^^^^ ambiguous name
-    |
-    = note: ambiguous because of multiple glob imports of a name in the same module
-note: `PlaybackState` could refer to the struct imported here
-   --> src/db/mod.rs:12:9
-    |
- 12 | pub use models::*;
-    |         ^^^^^^^^^
-    = help: consider adding an explicit import of `PlaybackState` to disambiguate
-note: `PlaybackState` could also refer to the struct imported here
-   --> src/db/mod.rs:14:9
-    |
- 14 | pub use playback::*;
-    |         ^^^^^^^^^^^
-    = help: consider adding an explicit import of `PlaybackState` to disambiguate
-
-warning: unused import: `SCHEMA_VERSION`
- --> src/db/migrations.rs:2:47
-  |
-2 | use super::schema::{CORE_SCHEMA, TMDB_SCHEMA, SCHEMA_VERSION};
-  |                                               ^^^^^^^^^^^^^^
-  |
-  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
-
-warning: unused import: `chrono::Utc`
- --> src/db/operations.rs:2:5
-  |
-2 | use chrono::Utc;
-  |     ^^^^^^^^^^^
-
-warning: unused import: `metadata::MediaMetadata`
- --> src/indexer/mod.rs:6:9
-  |
-6 | pub use metadata::MediaMetadata;
-  |         ^^^^^^^^^^^^^^^^^^^^^^^
-
-error[E0308]: mismatched types
-   --> src/main.rs:226:5
-    |
-221 |   ) -> Result<Option<db::PlaybackState>, String> {
-    |        ----------------------------------------- expected `Result<std::option::Option<models::PlaybackState>, std::string::String>` because of return type
-...
-226 | /     db::get_playback_state(&conn, media_id)
-227 | |         .map_err(|e| e.to_string())
-    | |___________________________________^ expected `models::PlaybackState`, found `playback::PlaybackState`
-    |
-    = note: `playback::PlaybackState` and `models::PlaybackState` have similar names, but are actually distinct types
-note: `playback::PlaybackState` is defined in module `crate::db::playback` of the current crate
-   --> src/db/playback.rs:186:1
-    |
-186 | pub struct PlaybackState {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^
-note: `models::PlaybackState` is defined in module `crate::db::models` of the current crate
-   --> src/db/models.rs:72:1
-    |
- 72 | pub struct PlaybackState {
-    | ^^^^^^^^^^^^^^^^^^^^^^^^
-
-warning: unused import: `Manager`
- --> src/main.rs:9:20
-  |
-9 | use tauri::{State, Manager};
-  |                    ^^^^^^^
-
-error[E0507]: cannot move out of `media_type`, a captured variable in an `FnMut` closure
-   --> src/db/operations.rs:139:13
-    |
-117 | pub fn get_media_by_type(conn: &Connection, media_type: MediaType) -> Result<Vec<MediaFile>> {
-    |                                             ----------  --------- move occurs because `media_type` has type `models::MediaType`, which does not implement the `Copy` trait
-    |                                             |
-    |                                             captured outer variable
-...
-132 |     let media_iter = stmt.query_map([media_type_str], |row| {
-    |                                                       ----- captured by this `FnMut` closure
-...
-139 |             media_type,
-    |             ^^^^^^^^^^ `media_type` is moved here
-    |
-help: `Fn` and `FnMut` closures require captured values to be able to be consumed multiple times, but `FnOnce` closures may consume them only once
-   --> /Users/runner/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rusqlite-0.31.0/src/statement.rs:281:12
-    |
-281 |         F: FnMut(&Row<'_>) -> Result<T>,
-    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-help: consider cloning the value if the performance cost is acceptable
-    |
-139 |             media_type: media_type.clone(),
-    |                       ++++++++++++++++++++
-
-error[E0505]: cannot move out of `media_type` because it is borrowed
-   --> src/db/operations.rs:132:55
-    |
-117 | pub fn get_media_by_type(conn: &Connection, media_type: MediaType) -> Result<Vec<MediaFile>> {
-    |                                             ---------- binding `media_type` declared here
-118 |     let media_type_str = media_type.as_str();
-    |                          ---------- borrow of `media_type` occurs here
-...
-132 |     let media_iter = stmt.query_map([media_type_str], |row| {
-    |                           ---------                   ^^^^^ move out of `media_type` occurs here
-    |                           |
-    |                           borrow later used by call
-...
-139 |             media_type,
-    |             ---------- move occurs due to use in closure
-    |
-help: consider cloning the value if the performance cost is acceptable
-    |
-118 |     let media_type_str = media_type.clone().as_str();
-    |                                    ++++++++
-
-error[E0382]: use of moved value
-   --> src/indexer/metadata.rs:102:29
-    |
- 93 |     let year = if let Some(re) = year_pattern {
-    |                            -- value moved here
-...
-102 |     let title = if let Some(re) = year_pattern {
-    |                             ^^ value used here after move
-    |
-    = note: move occurs because value has type `regex::Regex`, which does not implement the `Copy` trait
-help: borrow this binding in the pattern to avoid moving the value
-    |
- 93 |     let year = if let Some(ref re) = year_pattern {
-    |                            +++
-
-Some errors have detailed explanations: E0308, E0382, E0505, E0507, E0659.
-For more information about an error, try `rustc --explain E0308`.
-warning: `cinevault` (bin "cinevault") generated 4 warnings
-error: could not compile `cinevault` (bin "cinevault") due to 5 previous errors; 4 warnings emitted
+Some errors have detailed explanations: E0282, E0412, E0422.
+For more information about an error, try `rustc --explain E0282`.
+error: could not compile `cinevault` (bin "cinevault") due to 4 previous errors
        Error failed to build app: failed to build app
 Error: Command "npm ["run","tauri","build"]" failed with exit code 1

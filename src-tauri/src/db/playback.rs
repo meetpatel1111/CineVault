@@ -1,5 +1,6 @@
 use rusqlite::{Connection, Result, params};
 use chrono::Utc;
+use super::models::PlaybackState;
 
 /// Update or create playback state for a media file
 pub fn update_playback_position(
