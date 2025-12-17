@@ -93,8 +93,8 @@ pub fn parse_filename(filename: &str) -> (String, Option<u32>) {
     // Remove file extension
     let name = filename.rsplit_once('.').map(|(n, _)| n).unwrap_or(filename);
     
-    // Try to extract year from patterns like (2020) or [2020]
-    let year_pattern = regex::Regex::new(r"[\(\[](\d{4})[\)\]]").ok();
+    // Try to extract year from patterns like (2020) or [2020] or just 2020
+    let year_pattern = regex::Regex::new(r"[\(\[]?(\d{4})[\)\]]?").ok();
     
     let year = if let Some(ref re) = year_pattern {
         re.captures(name)
@@ -104,12 +104,18 @@ pub fn parse_filename(filename: &str) -> (String, Option<u32>) {
         None
     };
     
-    // Clean up the title
-    let title = if let Some(ref re) = year_pattern {
-        re.replace(name, "").to_string()
-    } else {
-        name.to_string()
-    };
+    // Clean up the title - remove year and quality info
+    let mut title = name.to_string();
+    
+    // Remove year patterns
+    if let Some(ref re) = regex::Regex::new(r"[\(\[]?\d{4}[\)\]]?").ok() {
+        title = re.replace(&title, "").to_string();
+    }
+    
+    // Remove quality/resolution patterns (720p, 1080p, 4K, etc.)
+    if let Some(ref re) = regex::Regex::new(r"\b(720p|1080p|2160p|4k|hd|uhd|bluray|web-?dl|webrip|hdtv)\b").ok() {
+        title = re.replace_all(&title, "").to_string();
+    }
     
     // Clean up common patterns
     let title = title
@@ -120,7 +126,7 @@ pub fn parse_filename(filename: &str) -> (String, Option<u32>) {
         .collect::<Vec<_>>()
         .join(" ");
     
-    (title, year)
+    (title.trim().to_string(), year)
 }
 
 /// Parse TV show episode information from filename

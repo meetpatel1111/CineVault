@@ -1,234 +1,44 @@
-# ubuntu build logs
-   Compiling alloc-stdlib v0.2.2
-warning: soup2-sys@0.2.0: 
-error: failed to run custom build command for `soup2-sys v0.2.0`
-
-Caused by:
-  process didn't exit successfully: `/home/runner/work/CineVault/CineVault/src-tauri/target/release/build/soup2-sys-7757b30ee885a2dc/build-script-build` (exit status: 1)
-  --- stdout
-  cargo:rerun-if-env-changed=LIBSOUP_2.4_NO_PKG_CONFIG
-  cargo:rerun-if-env-changed=PKG_CONFIG_x86_64-unknown-linux-gnu
-  cargo:rerun-if-env-changed=PKG_CONFIG_x86_64_unknown_linux_gnu
-  cargo:rerun-if-env-changed=HOST_PKG_CONFIG
-  cargo:rerun-if-env-changed=PKG_CONFIG
-  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_x86_64-unknown-linux-gnu
-  cargo:rerun-if-env-changed=PKG_CONFIG_PATH_x86_64_unknown_linux_gnu
-  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_PATH
-  cargo:rerun-if-env-changed=PKG_CONFIG_PATH
-  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_x86_64-unknown-linux-gnu
-  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR_x86_64_unknown_linux_gnu
-  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_LIBDIR
-  cargo:rerun-if-env-changed=PKG_CONFIG_LIBDIR
-  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_x86_64-unknown-linux-gnu
-  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR_x86_64_unknown_linux_gnu
-  cargo:rerun-if-env-changed=HOST_PKG_CONFIG_SYSROOT_DIR
-  cargo:rerun-if-env-changed=PKG_CONFIG_SYSROOT_DIR
-  cargo:warning=
-  pkg-config exited with status code 1
-  > PKG_CONFIG_ALLOW_SYSTEM_CFLAGS=1 pkg-config --libs --cflags libsoup-2.4 'libsoup-2.4 >= 2.62'
-
-  The system library `libsoup-2.4` required by crate `soup2-sys` was not found.
-  The file `libsoup-2.4.pc` needs to be installed and the PKG_CONFIG_PATH environment variable must contain its parent directory.
-  The PKG_CONFIG_PATH environment variable is not set.
-
-  HINT: if you have installed the library, try setting PKG_CONFIG_PATH to the directory containing `libsoup-2.4.pc`.
-
-warning: build failed, waiting for other jobs to finish...
-       Error failed to build app: failed to build app
-Error: Command "npm ["run","tauri","build"]" failed with exit code 1
-
-# macos build logs
+# test logs
+   Compiling fallible-streaming-iterator v0.1.9
    Compiling rusqlite v0.31.0
-warning: constant `SCHEMA_VERSION` is never used
- --> src/db/schema.rs:7:11
+   Compiling chrono v0.4.42
+warning: unused import: `rusqlite::Connection`
+ --> src/db/tests.rs:4:9
   |
-7 | pub const SCHEMA_VERSION: i32 = 1;
-  |           ^^^^^^^^^^^^^^
+4 |     use rusqlite::Connection;
+  |         ^^^^^^^^^^^^^^^^^^^^
   |
-  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+warning: `cinevault` (bin "cinevault" test) generated 1 warning (run `cargo fix --bin "cinevault" -p cinevault --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 22s
+     Running unittests src/main.rs (target/debug/deps/cinevault-a40d73588ceebac7)
+running 16 tests
+test db::migrations::tests::test_default_settings ... ok
+test db::migrations::tests::test_migrations ... ok
+test db::tests::tests::test_database_creation ... ok
+test db::tests::tests::test_core_tables_exist ... ok
+test db::tests::tests::test_default_settings ... ok
+test db::tests::tests::test_insert_media_file ... ok
+test db::tests::tests::test_tmdb_tables_exist ... ok
+test db::tests::tests::test_foreign_key_cascade ... ok
+test indexer::metadata::tests::test_duration_string ... ok
+test indexer::hash::tests::test_quick_hash ... ok
+test indexer::hash::tests::test_hash_calculation ... ok
+test indexer::metadata::tests::test_resolution_string ... ok
+test indexer::scanner::tests::test_extension_detection ... ok
+test indexer::scanner::tests::test_file_type_detection ... ok
+test indexer::metadata::tests::test_parse_filename ... FAILED
+test indexer::metadata::tests::test_parse_episode_info ... ok
+failures:
+---- indexer::metadata::tests::test_parse_filename stdout ----
+thread 'indexer::metadata::tests::test_parse_filename' (9034) panicked at src/indexer/metadata.rs:161:9:
+assertion `left == right` failed
+  left: "The Matrix 1999 1080p"
+ right: "The Matrix"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+failures:
+    indexer::metadata::tests::test_parse_filename
+test result: FAILED. 15 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+error: test failed, to rerun pass `--bin cinevault`
+Error: Process completed with exit code 101.
 
-warning: struct `Playlist` is never constructed
-  --> src/db/models.rs:84:12
-   |
-84 | pub struct Playlist {
-   |            ^^^^^^^^
-
-warning: enum `PlaylistType` is never used
-  --> src/db/models.rs:97:10
-   |
-97 | pub enum PlaylistType {
-   |          ^^^^^^^^^^^^
-
-warning: associated items `as_str` and `from_str` are never used
-   --> src/db/models.rs:104:12
-    |
-103 | impl PlaylistType {
-    | ----------------- associated items in this implementation
-104 |     pub fn as_str(&self) -> &str {
-    |            ^^^^^^
-...
-112 |     pub fn from_str(s: &str) -> Option<Self> {
-    |            ^^^^^^^^
-
-warning: struct `Collection` is never constructed
-   --> src/db/models.rs:124:12
-    |
-124 | pub struct Collection {
-    |            ^^^^^^^^^^
-
-warning: struct `TmdbMedia` is never constructed
-   --> src/db/models.rs:136:12
-    |
-136 | pub struct TmdbMedia {
-    |            ^^^^^^^^^
-
-warning: struct `TmdbMetadata` is never constructed
-   --> src/db/models.rs:149:12
-    |
-149 | pub struct TmdbMetadata {
-    |            ^^^^^^^^^^^^
-
-warning: struct `Setting` is never constructed
-   --> src/db/models.rs:184:12
-    |
-184 | pub struct Setting {
-    |            ^^^^^^^
-
-warning: function `mark_missing_files` is never used
-   --> src/db/operations.rs:210:8
-    |
-210 | pub fn mark_missing_files(conn: &Connection, existing_paths: &[String]) -> Result<usize> {
-    |        ^^^^^^^^^^^^^^^^^^
-
-warning: function `log_playback_session` is never used
-  --> src/db/playback.rs:68:8
-   |
-68 | pub fn log_playback_session(
-   |        ^^^^^^^^^^^^^^^^^^^^
-
-warning: methods `is_media_file` and `get_file_type` are never used
-   --> src/indexer/scanner.rs:130:12
-    |
- 33 | impl MediaScanner {
-    | ----------------- methods in this implementation
-...
-130 |     pub fn is_media_file<P: AsRef<Path>>(&self, path: P) -> bool {
-    |            ^^^^^^^^^^^^^
-...
-145 |     pub fn get_file_type<P: AsRef<Path>>(&self, path: P) -> Option<FileType> {
-    |            ^^^^^^^^^^^^^
-
-warning: method `as_str` is never used
-   --> src/indexer/scanner.rs:182:12
-    |
-181 | impl FileType {
-    | ------------- method in this implementation
-182 |     pub fn as_str(&self) -> &str {
-    |            ^^^^^^
-
-warning: variant `PermissionDenied` is never constructed
-   --> src/indexer/scanner.rs:204:5
-    |
-193 | pub enum ScanError {
-    |          --------- variant in this enum
-...
-204 |     PermissionDenied(String),
-    |     ^^^^^^^^^^^^^^^^
-    |
-    = note: `ScanError` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
-
-warning: struct `MediaMetadata` is never constructed
- --> src/indexer/metadata.rs:6:12
-  |
-6 | pub struct MediaMetadata {
-  |            ^^^^^^^^^^^^^
-
-warning: associated items `extract_from_file`, `resolution_string`, `duration_string`, and `is_complete` are never used
-  --> src/indexer/metadata.rs:38:12
-   |
-34 | impl MediaMetadata {
-   | ------------------ associated items in this implementation
-...
-38 |     pub fn extract_from_file<P: AsRef<Path>>(_path: P) -> Result<Self, MetadataError> {
-   |            ^^^^^^^^^^^^^^^^^
-...
-45 |     pub fn resolution_string(&self) -> Option<String> {
-   |            ^^^^^^^^^^^^^^^^^
-...
-54 |     pub fn duration_string(&self) -> Option<String> {
-   |            ^^^^^^^^^^^^^^^
-...
-67 |     pub fn is_complete(&self) -> bool {
-   |            ^^^^^^^^^^^
-
-warning: enum `MetadataError` is never used
-  --> src/indexer/metadata.rs:74:10
-   |
-74 | pub enum MetadataError {
-   |          ^^^^^^^^^^^^^
-
-warning: function `full_hash` is never used
-  --> src/indexer/hash.rs:48:8
-   |
-48 | pub fn full_hash<P: AsRef<Path>>(path: P) -> io::Result<String> {
-   |        ^^^^^^^^^
-
-warning: struct `PlayerState` is never constructed
-  --> src/player/mod.rs:10:12
-   |
-10 | pub struct PlayerState {
-   |            ^^^^^^^^^^^
-
-warning: function `get_playback_url` is never used
-  --> src/player/mod.rs:19:8
-   |
-19 | pub fn get_playback_url(file_path: &str) -> String {
-   |        ^^^^^^^^^^^^^^^^
-
-warning: function `is_html5_supported` is never used
-  --> src/player/mod.rs:25:8
-   |
-25 | pub fn is_html5_supported(extension: &str) -> bool {
-   |        ^^^^^^^^^^^^^^^^^^
-
-warning: function `get_recommended_player` is never used
-  --> src/player/mod.rs:33:8
-   |
-33 | pub fn get_recommended_player(file_path: &PathBuf) -> PlayerType {
-   |        ^^^^^^^^^^^^^^^^^^^^^^
-
-warning: enum `PlayerType` is never used
-  --> src/player/mod.rs:47:10
-   |
-47 | pub enum PlayerType {
-   |          ^^^^^^^^^^
-
-warning: `cinevault` (bin "cinevault") generated 22 warnings
-    Finished `release` profile [optimized] target(s) in 3m 09s
-        Warn Signing, by default, is only supported on Windows hosts, but you can specify a custom signing command in `bundler > windows > sign_command`, for now, skipping signing the installer...
-    Bundling CineVault.app (/Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/macos/CineVault.app)
-    Bundling CineVault_0.1.0_aarch64.dmg (/Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/dmg/CineVault_0.1.0_aarch64.dmg)
-     Running bundle_dmg.sh
-    Finished 2 bundles at:
-        /Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/macos/CineVault.app
-        /Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/dmg/CineVault_0.1.0_aarch64.dmg
-
-Looking for artifacts in:
-/Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/dmg/CineVault_0.1.0_aarch64.dmg
-/Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/macos/CineVault.app
-/Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/macos/CineVault.app.tar.gz
-/Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/macos/CineVault.app.tar.gz.sig
-Found artifacts:
-/Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/dmg/CineVault_0.1.0_aarch64.dmg
-/Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/macos/CineVault.app
-Packaging /Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/macos/CineVault.app directory into /Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/macos/CineVault.app.tar.gz
-running tar [
-  'czf',
-  '/Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/macos/CineVault.app.tar.gz',
-  '-C',
-  '/Users/runner/work/CineVault/CineVault/src-tauri/target/release/bundle/macos',
-  'CineVault.app'
-]
-Looking for a draft release with tag cinevault-v0.1.0...
-Couldn't find release with tag cinevault-v0.1.0. Creating one.
-Error: Resource not accessible by integration - https://docs.github.com/rest/releases/releases#create-a-release

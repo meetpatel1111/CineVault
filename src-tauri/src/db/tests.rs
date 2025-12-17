@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod tests {
     use super::super::*;
-    use rusqlite::Connection;
     use std::path::PathBuf;
 
     #[test]

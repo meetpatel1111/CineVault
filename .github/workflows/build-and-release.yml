@@ -15,7 +15,95 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  # Test job - runs first to fail fast on errors
+  test:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.0-dev \
+            libsoup2.4-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            pkg-config
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run frontend tests
+        run: npm test -- --run || echo "No tests configured yet"
+
+      - name: Lint frontend
+        run: npm run lint || echo "No lint script configured"
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Run Rust tests
+        working-directory: src-tauri
+        run: cargo test
+
+      - name: Run Rust clippy
+        working-directory: src-tauri
+        run: cargo clippy -- -D warnings || echo "Clippy warnings found"
+
+  # Database test job
+  test-database:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.0-dev \
+            libsoup2.4-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            pkg-config
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Test database migrations
+        working-directory: src-tauri
+        run: |
+          cargo test db::tests --release
+          echo "✅ Database tests passed"
+
+      - name: Test playback tracking
+        working-directory: src-tauri
+        run: |
+          cargo test playback --release || echo "Playback tests pending"
+
   build:
+    needs: test
     strategy:
       fail-fast: false
       matrix:
@@ -121,85 +209,3 @@ jobs:
               repo: context.repo.repo,
               body: '🎬 **CineVault Preview**\n\n✅ Build successful!\n\n📦 Download artifacts from the Actions tab\n\n⚠️ Note: This is a desktop app. Download and install the executable for your platform.'
             })
-
-  # Test job - runs automated tests
-  test:
-    runs-on: ubuntu-22.04
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgtk-3-dev \
-            libwebkit2gtk-4.0-dev \
-            libsoup2.4-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            pkg-config
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run frontend tests
-        run: npm test -- --run || echo "No tests configured yet"
-
-      - name: Lint frontend
-        run: npm run lint || echo "No lint script configured"
-
-      - name: Type check
-        run: npx tsc --noEmit
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Run Rust tests
-        working-directory: src-tauri
-        run: cargo test
-
-      - name: Run Rust clippy
-        working-directory: src-tauri
-        run: cargo clippy -- -D warnings || echo "Clippy warnings found"
-
-  # Database test job
-  test-database:
-    runs-on: ubuntu-22.04
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgtk-3-dev \
-            libwebkit2gtk-4.0-dev \
-            libsoup2.4-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            pkg-config
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Test database migrations
-        working-directory: src-tauri
-        run: |
-          cargo test db::tests --release
-          echo "✅ Database tests passed"
-
-      - name: Test playback tracking
-        working-directory: src-tauri
-        run: |
-          cargo test playback --release || echo "Playback tests pending"
