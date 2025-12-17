@@ -6,6 +6,7 @@
 use std::path::PathBuf;
 
 /// Player state
+#[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PlayerState {
     pub file_path: String,
@@ -16,12 +17,14 @@ pub struct PlayerState {
 
 /// Convert file path to playback URL
 /// For now, we use the convertFileSrc API from Tauri
+#[allow(dead_code)]
 pub fn get_playback_url(file_path: &str) -> String {
     // Tauri will handle this on the frontend with convertFileSrc
     file_path.to_string()
 }
 
 /// Check if file format is supported by HTML5
+#[allow(dead_code)]
 pub fn is_html5_supported(extension: &str) -> bool {
     matches!(
         extension.to_lowercase().as_str(),
@@ -30,6 +33,7 @@ pub fn is_html5_supported(extension: &str) -> bool {
 }
 
 /// Get recommended player for a file
+#[allow(dead_code)]
 pub fn get_recommended_player(file_path: &PathBuf) -> PlayerType {
     let extension = file_path
         .extension()
@@ -43,6 +47,7 @@ pub fn get_recommended_player(file_path: &PathBuf) -> PlayerType {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
 pub enum PlayerType {
     Html5,

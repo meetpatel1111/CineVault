@@ -127,6 +127,7 @@ impl MediaScanner {
     }
 
     /// Check if a file is a supported media file
+    #[allow(dead_code)]
     pub fn is_media_file<P: AsRef<Path>>(&self, path: P) -> bool {
         let path = path.as_ref();
         let extension = path.extension()
@@ -142,6 +143,7 @@ impl MediaScanner {
     }
 
     /// Get the media type from a file path
+    #[allow(dead_code)]
     pub fn get_file_type<P: AsRef<Path>>(&self, path: P) -> Option<FileType> {
         let path = path.as_ref();
         let extension = path.extension()
@@ -179,6 +181,7 @@ pub enum FileType {
 }
 
 impl FileType {
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &str {
         match self {
             FileType::Video => "video",
@@ -201,6 +204,7 @@ pub enum ScanError {
     ReadError(String),
 
     #[error("Permission denied: {0}")]
+    #[allow(dead_code)]
     PermissionDenied(String),
 }
 

@@ -80,6 +80,7 @@ pub struct PlaybackState {
 }
 
 /// Playlist record
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Playlist {
     pub id: Option<i64>,
@@ -92,6 +93,7 @@ pub struct Playlist {
     pub metadata_json: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PlaylistType {
@@ -101,6 +103,7 @@ pub enum PlaylistType {
 }
 
 impl PlaylistType {
+    #[allow(dead_code)]
     pub fn as_str(&self) -> &str {
         match self {
             PlaylistType::Manual => "manual",
@@ -109,6 +112,7 @@ impl PlaylistType {
         }
     }
     
+    #[allow(dead_code)]
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "manual" => Some(PlaylistType::Manual),
@@ -120,6 +124,7 @@ impl PlaylistType {
 }
 
 /// Collection record
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Collection {
     pub id: Option<i64>,
@@ -132,6 +137,7 @@ pub struct Collection {
 }
 
 /// TMDB media mapping
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TmdbMedia {
     pub id: Option<i64>,
@@ -145,6 +151,7 @@ pub struct TmdbMedia {
 }
 
 /// TMDB metadata
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TmdbMetadata {
     pub tmdb_id: i64,
@@ -180,6 +187,7 @@ pub struct TmdbMetadata {
 }
 
 /// Settings record
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Setting {
     pub key: String,

@@ -207,6 +207,7 @@ pub fn search_media(conn: &Connection, query: &str) -> Result<Vec<MediaFile>> {
 }
 
 /// Mark files not in the provided list as deleted (for cleanup after scan)
+#[allow(dead_code)]
 pub fn mark_missing_files(conn: &Connection, existing_paths: &[String]) -> Result<usize> {
     // Build placeholders for SQL IN clause
     if existing_paths.is_empty() {

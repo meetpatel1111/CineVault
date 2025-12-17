@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 /// Media metadata extracted from files
+#[allow(dead_code)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MediaMetadata {
     pub duration: Option<u64>,       // Duration in seconds
@@ -35,6 +36,7 @@ impl MediaMetadata {
     /// Extract metadata from a media file
     /// Note: This is a placeholder. In a real implementation, you would use
     /// FFmpeg, libVLC, or similar to extract actual metadata.
+    #[allow(dead_code)]
     pub fn extract_from_file<P: AsRef<Path>>(_path: P) -> Result<Self, MetadataError> {
         // TODO: Implement actual metadata extraction using FFmpeg or similar
         // For now, return default metadata
@@ -42,6 +44,7 @@ impl MediaMetadata {
     }
 
     /// Get resolution as a string (e.g., "1920x1080")
+    #[allow(dead_code)]
     pub fn resolution_string(&self) -> Option<String> {
         if let (Some(w), Some(h)) = (self.width, self.height) {
             Some(format!("{}x{}", w, h))
@@ -51,6 +54,7 @@ impl MediaMetadata {
     }
 
     /// Get duration as formatted string (e.g., "1h 42m")
+    #[allow(dead_code)]
     pub fn duration_string(&self) -> Option<String> {
         self.duration.map(|seconds| {
             let hours = seconds / 3600;
@@ -64,12 +68,14 @@ impl MediaMetadata {
     }
 
     /// Check if metadata is complete
+    #[allow(dead_code)]
     pub fn is_complete(&self) -> bool {
         self.duration.is_some() && self.codec.is_some()
     }
 }
 
 /// Errors that can occur during metadata extraction
+#[allow(dead_code)]
 #[derive(Debug, thiserror::Error)]
 pub enum MetadataError {
     #[error("File not found: {0}")]

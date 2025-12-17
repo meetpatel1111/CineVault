@@ -65,6 +65,7 @@ pub fn get_playback_state(conn: &Connection, media_id: i64) -> Result<Option<Pla
 }
 
 /// Log a playback session to history
+#[allow(dead_code)]
 pub fn log_playback_session(
     conn: &Connection,
     media_id: i64,

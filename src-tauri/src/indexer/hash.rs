@@ -45,6 +45,7 @@ pub fn quick_hash<P: AsRef<Path>>(path: P) -> io::Result<String> {
 }
 
 /// Calculate full SHA256 hash of entire file
+#[allow(dead_code)]
 pub fn full_hash<P: AsRef<Path>>(path: P) -> io::Result<String> {
     calculate_file_hash(path, false)
 }
