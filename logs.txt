@@ -1,44 +1,102 @@
-# test logs
-   Compiling fallible-streaming-iterator v0.1.9
-   Compiling rusqlite v0.31.0
-   Compiling chrono v0.4.42
-warning: unused import: `rusqlite::Connection`
- --> src/db/tests.rs:4:9
-  |
-4 |     use rusqlite::Connection;
-  |         ^^^^^^^^^^^^^^^^^^^^
-  |
-  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
-warning: `cinevault` (bin "cinevault" test) generated 1 warning (run `cargo fix --bin "cinevault" -p cinevault --tests` to apply 1 suggestion)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 22s
-     Running unittests src/main.rs (target/debug/deps/cinevault-a40d73588ceebac7)
-running 16 tests
-test db::migrations::tests::test_default_settings ... ok
-test db::migrations::tests::test_migrations ... ok
-test db::tests::tests::test_database_creation ... ok
-test db::tests::tests::test_core_tables_exist ... ok
-test db::tests::tests::test_default_settings ... ok
-test db::tests::tests::test_insert_media_file ... ok
-test db::tests::tests::test_tmdb_tables_exist ... ok
-test db::tests::tests::test_foreign_key_cascade ... ok
-test indexer::metadata::tests::test_duration_string ... ok
-test indexer::hash::tests::test_quick_hash ... ok
-test indexer::hash::tests::test_hash_calculation ... ok
-test indexer::metadata::tests::test_resolution_string ... ok
-test indexer::scanner::tests::test_extension_detection ... ok
-test indexer::scanner::tests::test_file_type_detection ... ok
-test indexer::metadata::tests::test_parse_filename ... FAILED
-test indexer::metadata::tests::test_parse_episode_info ... ok
-failures:
----- indexer::metadata::tests::test_parse_filename stdout ----
-thread 'indexer::metadata::tests::test_parse_filename' (9034) panicked at src/indexer/metadata.rs:161:9:
-assertion `left == right` failed
-  left: "The Matrix 1999 1080p"
- right: "The Matrix"
-note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
-failures:
-    indexer::metadata::tests::test_parse_filename
-test result: FAILED. 15 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
-error: test failed, to rerun pass `--bin cinevault`
-Error: Process completed with exit code 101.
+#test logs
 
+    Checking chrono v0.4.42
+error: empty line after doc comment
+ --> src/db/schema.rs:4:1
+  |
+4 | / /// functionality and optional TMDB integration.
+5 | |
+  | |_^
+...
+8 |   pub const SCHEMA_VERSION: i32 = 1;
+  |   ------------------------ the comment documents this constant item
+  |
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.92.0/index.html#empty_line_after_doc_comments
+  = note: `-D clippy::empty-line-after-doc-comments` implied by `-D warnings`
+  = help: to override `-D warnings` add `#[allow(clippy::empty_line_after_doc_comments)]`
+  = help: if the empty line is unintentional, remove it
+help: if the comment should document the parent module use an inner doc comment
+  |
+1 ~ //! Database schema definitions for CineVault
+2 ~ //! 
+3 ~ //! This module contains all SQL schema definitions for both core
+4 ~ //! functionality and optional TMDB integration.
+  |
+help: if the documentation should include the empty line include it in the comment
+  |
+5 | ///
+  |
+error: empty line after doc comment
+ --> src/player/mod.rs:4:1
+  |
+4 | / /// Future: Integrate FFmpeg or libVLC for advanced codec support.
+5 | |
+  | |_^
+6 |   use std::path::PathBuf;
+  |   - the comment documents this `use` import
+  |
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.92.0/index.html#empty_line_after_doc_comments
+  = help: if the empty line is unintentional, remove it
+help: if the comment should document the parent module use an inner doc comment
+  |
+1 ~ //! Player module for media playback
+2 ~ //! 
+3 ~ //! Currently uses HTML5 video/audio through the frontend.
+4 ~ //! Future: Integrate FFmpeg or libVLC for advanced codec support.
+  |
+error: this `impl` can be derived
+  --> src/indexer/metadata.rs:19:1
+   |
+19 | / impl Default for MediaMetadata {
+20 | |     fn default() -> Self {
+21 | |         Self {
+22 | |             duration: None,
+...  |
+33 | | }
+   | |_^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.92.0/index.html#derivable_impls
+   = note: `-D clippy::derivable-impls` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::derivable_impls)]`
+help: replace the manual implementation with a derive attribute
+   |
+ 7 + #[derive(Default)]
+ 8 | pub struct MediaMetadata {
+   |
+error: matching on `Some` with `ok()` is redundant
+   --> src/indexer/metadata.rs:111:5
+    |
+111 |     if let Some(ref re) = regex::Regex::new(r"[\(\[]?\d{4}[\)\]]?").ok() {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.92.0/index.html#match_result_ok
+    = note: `-D clippy::match-result-ok` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::match_result_ok)]`
+help: consider matching on `Ok(ref re)` and removing the call to `ok` instead
+    |
+111 -     if let Some(ref re) = regex::Regex::new(r"[\(\[]?\d{4}[\)\]]?").ok() {
+111 +     if let Ok(ref re) = regex::Regex::new(r"[\(\[]?\d{4}[\)\]]?") {
+    |
+error: matching on `Some` with `ok()` is redundant
+   --> src/indexer/metadata.rs:116:5
+    |
+116 |     if let Some(ref re) = regex::Regex::new(r"\b(720p|1080p|2160p|4k|hd|uhd|bluray|web-?dl|webrip|hdtv)\b").ok() {
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.92.0/index.html#match_result_ok
+help: consider matching on `Ok(ref re)` and removing the call to `ok` instead
+    |
+116 -     if let Some(ref re) = regex::Regex::new(r"\b(720p|1080p|2160p|4k|hd|uhd|bluray|web-?dl|webrip|hdtv)\b").ok() {
+116 +     if let Ok(ref re) = regex::Regex::new(r"\b(720p|1080p|2160p|4k|hd|uhd|bluray|web-?dl|webrip|hdtv)\b") {
+    |
+error: writing `&PathBuf` instead of `&Path` involves a new object where a slice will do
+  --> src/player/mod.rs:37:42
+   |
+37 | pub fn get_recommended_player(file_path: &PathBuf) -> PlayerType {
+   |                                          ^^^^^^^^ help: change this to: `&Path`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.92.0/index.html#ptr_arg
+   = note: `-D clippy::ptr-arg` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[allow(clippy::ptr_arg)]`
+error: could not compile `cinevault` (bin "cinevault") due to 6 previous errors
+Clippy warnings found

@@ -3,7 +3,7 @@ use std::path::Path;
 
 /// Media metadata extracted from files
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MediaMetadata {
     pub duration: Option<u64>,       // Duration in seconds
     pub width: Option<u32>,          // Video width
@@ -14,22 +14,6 @@ pub struct MediaMetadata {
     pub framerate: Option<f64>,      // Frames per second
     pub audio_channels: Option<u32>, // Number of audio channels
     pub sample_rate: Option<u32>,    // Audio sample rate
-}
-
-impl Default for MediaMetadata {
-    fn default() -> Self {
-        Self {
-            duration: None,
-            width: None,
-            height: None,
-            codec: None,
-            audio_codec: None,
-            bitrate: None,
-            framerate: None,
-            audio_channels: None,
-            sample_rate: None,
-        }
-    }
 }
 
 impl MediaMetadata {
@@ -108,12 +92,12 @@ pub fn parse_filename(filename: &str) -> (String, Option<u32>) {
     let mut title = name.to_string();
     
     // Remove year patterns
-    if let Some(ref re) = regex::Regex::new(r"[\(\[]?\d{4}[\)\]]?").ok() {
+    if let Ok(ref re) = regex::Regex::new(r"[\(\[]?\d{4}[\)\]]?") {
         title = re.replace(&title, "").to_string();
     }
     
     // Remove quality/resolution patterns (720p, 1080p, 4K, etc.)
-    if let Some(ref re) = regex::Regex::new(r"\b(720p|1080p|2160p|4k|hd|uhd|bluray|web-?dl|webrip|hdtv)\b").ok() {
+    if let Ok(ref re) = regex::Regex::new(r"\b(720p|1080p|2160p|4k|hd|uhd|bluray|web-?dl|webrip|hdtv)\b") {
         title = re.replace_all(&title, "").to_string();
     }
     

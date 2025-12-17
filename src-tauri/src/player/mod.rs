@@ -2,8 +2,7 @@
 /// 
 /// Currently uses HTML5 video/audio through the frontend.
 /// Future: Integrate FFmpeg or libVLC for advanced codec support.
-
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Player state
 #[allow(dead_code)]
@@ -34,7 +33,7 @@ pub fn is_html5_supported(extension: &str) -> bool {
 
 /// Get recommended player for a file
 #[allow(dead_code)]
-pub fn get_recommended_player(file_path: &PathBuf) -> PlayerType {
+pub fn get_recommended_player(file_path: &Path) -> PlayerType {
     let extension = file_path
         .extension()
         .and_then(|e| e.to_str())

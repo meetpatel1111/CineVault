@@ -2,7 +2,6 @@
 /// 
 /// This module contains all SQL schema definitions for both core
 /// functionality and optional TMDB integration.
-
 /// Core schema version
 #[allow(dead_code)]
 pub const SCHEMA_VERSION: i32 = 1;
