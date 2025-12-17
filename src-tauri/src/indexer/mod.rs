@@ -3,4 +3,4 @@ pub mod metadata;
 pub mod hash;
 
 pub use scanner::{MediaScanner, ScanProgress};
-pub use metadata::MediaMetadata;
+// MediaMetadata is used internally but not needed in public API

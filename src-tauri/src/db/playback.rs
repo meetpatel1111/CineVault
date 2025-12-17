@@ -182,16 +182,7 @@ pub fn get_watch_stats(conn: &Connection) -> Result<WatchStats> {
     })
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct PlaybackState {
-    pub media_id: i64,
-    pub last_position: i64,
-    pub duration: Option<i64>,
-    pub completed: bool,
-    pub watch_count: i32,
-    pub last_played_at: String,
-    pub created_at: String,
-}
+// PlaybackState is defined in models.rs and re-exported via mod.rs
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct RecentlyPlayed {

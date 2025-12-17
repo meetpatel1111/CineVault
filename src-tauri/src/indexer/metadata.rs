@@ -90,7 +90,7 @@ pub fn parse_filename(filename: &str) -> (String, Option<u32>) {
     // Try to extract year from patterns like (2020) or [2020]
     let year_pattern = regex::Regex::new(r"[\(\[](\d{4})[\)\]]").ok();
     
-    let year = if let Some(re) = year_pattern {
+    let year = if let Some(ref re) = year_pattern {
         re.captures(name)
             .and_then(|cap| cap.get(1))
             .and_then(|m| m.as_str().parse().ok())
@@ -99,7 +99,7 @@ pub fn parse_filename(filename: &str) -> (String, Option<u32>) {
     };
     
     // Clean up the title
-    let title = if let Some(re) = year_pattern {
+    let title = if let Some(ref re) = year_pattern {
         re.replace(name, "").to_string()
     } else {
         name.to_string()

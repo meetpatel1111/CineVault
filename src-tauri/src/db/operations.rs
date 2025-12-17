@@ -1,5 +1,4 @@
 use rusqlite::{Connection, Result, params};
-use chrono::Utc;
 use crate::db::models::{MediaFile, MediaType};
 
 /// Insert or update a media file in the database
@@ -136,7 +135,7 @@ pub fn get_media_by_type(conn: &Connection, media_type: MediaType) -> Result<Vec
             file_hash: row.get(2)?,
             file_name: row.get(3)?,
             file_size: row.get(4)?,
-            media_type,
+            media_type: media_type.clone(),
             duration: row.get(6)?,
             codec: row.get(7)?,
             resolution: row.get(8)?,

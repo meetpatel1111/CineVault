@@ -6,7 +6,7 @@ mod indexer;
 mod player;
 
 use std::sync::Mutex;
-use tauri::{State, Manager};
+use tauri::State;
 use chrono::Utc;
 
 // Application state

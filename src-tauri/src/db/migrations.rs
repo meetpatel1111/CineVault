@@ -1,5 +1,5 @@
 use rusqlite::{Connection, Result};
-use super::schema::{CORE_SCHEMA, TMDB_SCHEMA, SCHEMA_VERSION};
+use super::schema::{CORE_SCHEMA, TMDB_SCHEMA};
 
 /// Run all database migrations
 pub fn run_migrations(conn: &Connection) -> Result<()> {
