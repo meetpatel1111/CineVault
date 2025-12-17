@@ -239,7 +239,7 @@ mod tests {
 
     #[test]
     fn test_subtitle_crud() -> Result<()> {
-        let conn = init_db(":memory:")?;
+        let conn = init_db()?;
         let media_id = create_test_media(&conn)?;
         
         // Add subtitle

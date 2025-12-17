@@ -306,7 +306,7 @@ mod tests {
 
     #[test]
     fn test_playlist_crud() -> Result<()> {
-        let conn = init_db(":memory:")?;
+        let conn = init_db()?;
         
         // Create playlist
         let playlist_id = create_playlist(
@@ -338,7 +338,7 @@ mod tests {
 
     #[test]
     fn test_playlist_items() -> Result<()> {
-        let conn = init_db(":memory:")?;
+        let conn = init_db()?;
         
         // Create test data
         let media_id = create_test_media(&conn)?;
