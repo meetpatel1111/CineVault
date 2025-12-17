@@ -144,6 +144,7 @@ CREATE TABLE IF NOT EXISTS collection_items (
     collection_id INTEGER NOT NULL,
     media_id INTEGER NOT NULL,
     position INTEGER,
+    added_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
     FOREIGN KEY (collection_id) REFERENCES collections(id) ON DELETE CASCADE,
     FOREIGN KEY (media_id) REFERENCES media_files(id) ON DELETE CASCADE,

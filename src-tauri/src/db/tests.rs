@@ -38,7 +38,7 @@ mod tests {
             "playlist_rules",
             "collections",
             "collection_items",
-            "subtitles",
+            "subtitle_tracks",
             "audio_tracks",
             "settings",
         ];
