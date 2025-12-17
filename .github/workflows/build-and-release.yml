@@ -54,19 +54,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: v__VERSION__
+          tagName: cinevault-v__VERSION__
           releaseName: 'CineVault v__VERSION__'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
+          includeDebug: false
+          includeRelease: true
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: cinevault-${{ matrix.platform }}
           path: |
             src-tauri/target/release/bundle/
-            !src-tauri/target/release/bundle/**/*.deb
           retention-days: 7
 
   # Web demo job - serves the frontend for testing

@@ -29,7 +29,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [buffered, setBuffered] = useState(0);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const controlsTimeoutRef = useRef<number>();
 
   useEffect(() => {
     const video = videoRef.current;
