@@ -42,6 +42,16 @@ pub struct Playlist {
     pub metadata_json: Option<String>,
 }
 
+/// Playlist rule for smart playlists
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlaylistRule {
+    pub id: Option<i64>,
+    pub playlist_id: i64,
+    pub rule_type: String,
+    pub operator: String,
+    pub value: String,
+}
+
 /// Media file record
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MediaFile {

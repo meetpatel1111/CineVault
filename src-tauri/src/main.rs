@@ -575,6 +575,46 @@ fn delete_playlist(
 }
 
 #[tauri::command]
+fn add_playlist_rule(
+    playlist_id: i64,
+    rule_type: String,
+    operator: String,
+    value: String,
+    state: State<AppState>,
+) -> Result<i64, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::add_playlist_rule(&conn, playlist_id, &rule_type, &operator, &value)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_playlist_rules(
+    playlist_id: i64,
+    state: State<AppState>,
+) -> Result<Vec<db::PlaylistRule>, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::get_playlist_rules(&conn, playlist_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_playlist_rule(
+    rule_id: i64,
+    state: State<AppState>,
+) -> Result<(), String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::delete_playlist_rule(&conn, rule_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn check_dependencies() -> DependencyStatus {
     let ffmpeg = std::process::Command::new("ffmpeg")
         .arg("-version")
@@ -817,6 +857,9 @@ fn main() {
             remove_from_playlist,
             update_playlist,
             delete_playlist,
+            add_playlist_rule,
+            get_playlist_rules,
+            delete_playlist_rule,
             check_dependencies,
             generate_thumbnail,
             init_vlc_player,
