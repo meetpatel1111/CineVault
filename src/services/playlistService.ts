@@ -21,6 +21,14 @@ export interface PlaylistMediaItem {
   position: number;
 }
 
+export interface PlaylistRule {
+  id: number;
+  playlist_id: number;
+  rule_type: string;
+  operator: string;
+  value: string;
+}
+
 export const playlistService = {
   async createPlaylist(name: string, description?: string, playlistType: string = 'manual'): Promise<number> {
     return await invoke<number>('create_playlist', { 
@@ -52,5 +60,23 @@ export const playlistService = {
 
   async deletePlaylist(playlistId: number): Promise<void> {
     await invoke('delete_playlist', { playlistId });
+  },
+
+  // Smart Playlist Rules
+  async addRule(playlistId: number, ruleType: string, operator: string, value: string): Promise<number> {
+    return await invoke<number>('add_playlist_rule', {
+      playlistId,
+      ruleType,
+      operator,
+      value
+    });
+  },
+
+  async getRules(playlistId: number): Promise<PlaylistRule[]> {
+    return await invoke<PlaylistRule[]>('get_playlist_rules', { playlistId });
+  },
+
+  async deleteRule(ruleId: number): Promise<void> {
+    await invoke('delete_playlist_rule', { ruleId });
   },
 };

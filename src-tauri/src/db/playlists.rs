@@ -623,4 +623,50 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn test_smart_playlist_operators() -> Result<()> {
+        let conn = init_db()?;
+
+        // Add media with different years
+        let m1 = MediaFile {
+            title: Some("Old Movie".to_string()),
+            year: Some(1990),
+            media_type: MediaType::Movie,
+            file_path: "/test/1.mp4".to_string(), file_hash: "h1".to_string(), file_name: "1.mp4".to_string(), file_size: 1, duration: Some(100),
+            codec: None, resolution: None, bitrate: None, framerate: None, audio_codec: None, audio_channels: None,
+            season_number: None, episode_number: None, indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None, id: None,
+        };
+        add_media_file(&conn, &m1)?;
+
+        let m2 = MediaFile {
+            title: Some("New Movie".to_string()),
+            year: Some(2023),
+            media_type: MediaType::Movie,
+            file_path: "/test/2.mp4".to_string(), file_hash: "h2".to_string(), file_name: "2.mp4".to_string(), file_size: 1, duration: Some(100),
+            codec: None, resolution: None, bitrate: None, framerate: None, audio_codec: None, audio_channels: None,
+            season_number: None, episode_number: None, indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None, id: None,
+        };
+        add_media_file(&conn, &m2)?;
+
+        let pid = create_playlist(&conn, "Year Test", None, PlaylistType::Smart)?;
+
+        // Test Greater Than
+        add_playlist_rule(&conn, pid, "year", "gt", "2000")?;
+        let items = get_playlist_media(&conn, pid)?;
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].title.as_ref().unwrap(), "New Movie");
+
+        // Test Less Than
+        delete_playlist_rule(&conn, 1)?; // clear rules (id might be 1 if clean db)
+        // Actually since we don't know ID, let's delete all rules for playlist
+        conn.execute("DELETE FROM playlist_rules WHERE playlist_id = ?1", params![pid])?;
+
+        add_playlist_rule(&conn, pid, "year", "lt", "2000")?;
+        let items2 = get_playlist_media(&conn, pid)?;
+        assert_eq!(items2.len(), 1);
+        assert_eq!(items2[0].title.as_ref().unwrap(), "Old Movie");
+
+        Ok(())
+    }
 }

@@ -30,6 +30,7 @@ npm run tauri dev
 - Media cards appear in "Recently Added" section
 - Database stats update (shown in header subtitle)
 - Titles parsed from filenames (e.g., "The Matrix 1999" → "The Matrix" (1999))
+- **Thumbnails** generated for videos (if FFmpeg is installed)
 
 **Test Files:**
 - Movies: `The.Matrix.1999.1080p.mp4`
@@ -59,6 +60,10 @@ npm run tauri dev
 - Change playback speed (dropdown: 0.5x-2x)
 - Click fullscreen button
 
+**Advanced Playback (Optional):**
+- If built with `vlc` feature and `libvlc` installed, test playing MKV/AVI files.
+- Otherwise, check that MP4 plays via HTML5.
+
 **Keyboard Shortcuts:**
 - `Space`: Play/pause
 - `Arrow Left/Right`: Seek ±10 seconds
@@ -81,86 +86,50 @@ npm run tauri dev
 - Video starts from where you left off
 - Position saved every 5 seconds
 
-**To Verify:**
-- Console logs: "Progress: X/Y" every 5 seconds
-- Position persists across app restarts
-
 ---
 
-### ✅ Test 4: Watch Completion
+### ✅ Test 4: Smart Playlists
 
 **Steps:**
-1. Play a video
-2. Seek to ~95% of duration
-3. Let it play to the end
+1. Navigate to "Playlists" section
+2. Create a new playlist with type "Smart" (backend API only currently, or mock via dev tools)
+3. Add a rule (e.g., "year > 2000")
+4. Verify the playlist automatically populates with matching media
 
-**Expected Results:**
-- Automatically marked as completed
-- Console log: "Marked as completed: [title]"
-- Watch count incremented in database
+**Verification via Console:**
+```javascript
+// Example code to run in dev console to test smart playlist
+await window.__TAURI__.invoke('create_playlist', { name: 'Smart Movies', playlistType: 'smart' });
+// Add rule: media_type = movie
+await window.__TAURI__.invoke('add_playlist_rule', { playlistId: 1, ruleType: 'media_type', operator: 'equals', value: 'movie' });
+// Check results
+await window.__TAURI__.invoke('get_playlist_media', { playlistId: 1 });
+```
 
 ---
 
-### ✅ Test 5: Audio Playback
+### ✅ Test 5: Subtitle Management
 
 **Steps:**
-1. Scan a folder with music files
-2. Click a music track
+1. Hover over a media card
+2. Click the "Actions" dropdown
+3. Select "Manage Subtitles"
+4. Add a local `.srt` file
 
 **Expected Results:**
-- Audio player appears at bottom of screen
-- Shows album artwork placeholder (🎵)
-- Track title displayed
-- Controls: Play/pause, skip ±10s, volume
-- Progress bar updates
-- Can continue browsing library while music plays
+- Subtitle file is added to database
+- Toast notification appears
 
 ---
 
-### ✅ Test 6: Search Functionality
+### ✅ Test 6: Collections & Playlists
 
 **Steps:**
-1. Click the search bar in top navigation
-2. Type part of a movie/show title
-3. Press Enter
-
-**Expected Results:**
-- Search results appear (not yet implemented in UI, but backend is ready)
-- Searches both titles and filenames
-
----
-
-### ✅ Test 7: Settings Panel
-
-**Steps:**
-1. Click the **Settings** button (top right) or sidebar
-2. Navigate through tabs: General, Library, Playback, TMDB
-
-**Expected Results:**
-- Modal opens with 4 tabs
-- Settings displayed:
-  - General: Theme selection, startup options
-  - Library: Folder paths, scan interval
-  - Playback: Speed, auto-resume, completion threshold
-  - TMDB: API key, language, image quality
-
----
-
-### ✅ Test 8: UI Components
-
-**Test Dropdowns:**
-1. Click "Actions" dropdown button
-2. Try menu items: Play, View Details, Add to Playlist, Remove
-
-**Test Toasts:**
-- Automatic toasts appear on actions
-- 4 types: Success (green), Error (red), Warning (orange), Info (blue)
-- Auto-dismiss after 5 seconds
-- Closeable with X button
-
-**Test Badges:**
-- "Beta" badge (blue)
-- Item count badges (green/orange)
+1. Create a "Manual Playlist"
+2. Add items to it via the Media Card dropdown
+3. Verify items appear in the Playlist Detail view
+4. Create a "Collection"
+5. Add items and verify grouping
 
 ---
 
@@ -179,37 +148,30 @@ sqlite3 "%APPDATA%/com.cinevault.app/cinevault.db"
 -- View all media files
 SELECT title, year, media_type FROM media_files LIMIT 10;
 
--- View playback states
-SELECT m.title, p.last_position, p.duration, p.completed 
-FROM playback_state p 
-JOIN media_files m ON p.media_id = m.id;
+-- View playlist rules
+SELECT * FROM playlist_rules;
 
--- View watch history
-SELECT COUNT(*) as total_sessions FROM playback_history;
+-- View subtitle tracks
+SELECT * FROM subtitle_tracks;
 ```
 
 ---
 
-## Known Limitations (Current Version)
+## Known Limitations
 
 ### HTML5 Player Limitations
 ✅ **Supported Formats:**
 - Video: MP4 (H.264), WebM, OGG
 - Audio: MP3, WAV, FLAC, M4A, OGG
 
-⚠️ **Not Yet Supported:**
-- MKV files (need FFmpeg/libVLC integration)
+⚠️ **Requires LibVLC (Backend Feature):**
+- MKV files
 - AVI files
 - Advanced codecs (HEVC, AV1)
-- Embedded subtitles
 
 ### Features Not Yet Implemented
-- ❌ Subtitle loading/display
-- ❌ Multiple audio track selection
-- ❌ Smart playlists
-- ❌ Collections/grouping
 - ❌ TMDB metadata fetching
-- ❌ Advanced filtering/sorting in UI
+- ❌ Advanced filtering/sorting in UI (Backend ready)
 - ❌ Export/backup functionality
 
 ---
@@ -227,80 +189,6 @@ Test with different library sizes:
 - UI responsiveness
 - Search speed
 - Grid scroll performance
-
-### Memory Usage
-- Check Task Manager during playback
-- Memory should stay reasonable (< 500MB for typical usage)
-
----
-
-## Troubleshooting
-
-### Video Won't Play
-**Possible causes:**
-1. Unsupported codec (MKV, AVI not supported by HTML5)
-2. File path issues
-3. File permissions
-
-**Solution:**
-- Check browser console for errors
-- Try MP4 files first
-- Check file exists at scanned path
-
-### Playback Position Not Saving
-**Possible causes:**
-1. Media ID not parsed correctly
-2. Database write error
-
-**Solution:**
-- Check console logs for "Failed to save playback position"
-- Verify database file exists and is writable
-
-### Scan Not Finding Files
-**Possible causes:**
-1. Wrong folder selected
-2. Hidden files/folders (starting with .)
-3. No supported media files
-
-**Solution:**
-- Select folder with visible media files
-- Check file extensions are supported
-
----
-
-## Success Criteria
-
-✅ **Minimum Viable Product:**
-- [x] Scan directory and index files
-- [x] Display media in grid
-- [x] Play video files (MP4)
-- [x] Play audio files (MP3)
-- [x] Resume playback from last position
-- [x] Beautiful dark UI
-- [x] Responsive design
-
-🎉 **All core features are working!**
-
----
-
-## Next Steps After Testing
-
-Based on test results:
-1. **If Everything Works:** Celebrate! 🎉 Consider adding polish features
-2. **If Issues Found:** Document bugs and prioritize fixes
-3. **Performance Issues:** Run optimization (Task 13)
-4. **Missing Features:** Prioritize from remaining tasks
-
----
-
-## Reporting Issues
-
-When reporting bugs, please include:
-- Steps to reproduce
-- Expected vs actual behavior
-- Console logs (F12 → Console tab)
-- Media file format/codec
-- Operating system
 
 ---
 
