@@ -1,0 +1,55 @@
+.add-to-collection__loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.add-to-collection__empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--space-4);
+}
+
+.add-to-collection__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.add-to-collection__item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-primary);
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.add-to-collection__item:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.add-to-collection__item:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.add-to-collection__icon {
+  margin-right: var(--space-3);
+  font-size: 1.2rem;
+}
+
+.add-to-collection__name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.add-to-collection__count {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-right: var(--space-2);
+}

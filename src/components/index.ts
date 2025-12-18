@@ -23,3 +23,4 @@ export { SettingsPanel } from './Settings/SettingsPanel';
 export { VideoPlayer } from './Player/VideoPlayer';
 export { AudioPlayer } from './Player/AudioPlayer';
 export * from './Playlist';
+export * from './Collection';
