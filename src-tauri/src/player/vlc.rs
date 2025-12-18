@@ -49,6 +49,14 @@ impl VlcPlayer {
             }
         }
     }
+
+    pub fn set_audio_track(&self, track_id: i32) {
+        if let Ok(player_lock) = self.player.lock() {
+            if let Some(mp) = player_lock.as_ref() {
+                mp.set_audio_track(track_id);
+            }
+        }
+    }
 }
 
 // Stub implementation when feature is disabled

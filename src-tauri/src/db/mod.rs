@@ -6,6 +6,7 @@ pub mod operations;
 pub mod playback;
 pub mod playlists;
 pub mod collections;
+pub mod audio_tracks;
 pub mod subtitles;
 
 #[cfg(test)]

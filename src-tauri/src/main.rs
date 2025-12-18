@@ -303,6 +303,12 @@ async fn extract_metadata(
     
     db::upsert_media_file(&conn, &updated_media)
         .map_err(|e| e.to_string())?;
+
+    // Save audio tracks
+    if !metadata.audio_tracks.is_empty() {
+        db::audio_tracks::save_audio_tracks(&conn, media_id, &updated_media.file_path, &metadata.audio_tracks)
+            .map_err(|e| e.to_string())?;
+    }
     
     Ok(MetadataResult {
         duration: metadata.duration,
@@ -380,6 +386,18 @@ fn scan_subtitles(
     
     db::scan_and_add_subtitles(&conn, media_id, &media_path)
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_audio_tracks(
+    media_id: i64,
+    state: State<AppState>,
+) -> Result<Vec<db::audio_tracks::AudioTrack>, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::audio_tracks::get_audio_tracks(&conn, media_id).map_err(|e| e.to_string())
 }
 
 // Collection commands
@@ -694,6 +712,30 @@ fn play_in_vlc(
 }
 
 #[tauri::command]
+#[allow(unused_variables)]
+fn set_audio_track(
+    track_index: i32,
+    state: State<AppState>,
+) -> Result<(), String> {
+    if cfg!(feature = "vlc") {
+        #[cfg(feature = "vlc")]
+        {
+            let player_lock = state.vlc_player.lock().map_err(|_| "Failed to lock state")?;
+            if let Some(player) = player_lock.as_ref() {
+                player.set_audio_track(track_index);
+                Ok(())
+            } else {
+                Err("VLC player not initialized.".into())
+            }
+        }
+        #[cfg(not(feature = "vlc"))]
+        Err("VLC feature not enabled".into())
+    } else {
+        Err("VLC feature not enabled".into())
+    }
+}
+
+#[tauri::command]
 async fn extract_all_metadata(
     state: State<'_, AppState>,
     window: tauri::Window,
@@ -843,6 +885,7 @@ fn main() {
             get_subtitle_tracks,
             remove_subtitle_track,
             scan_subtitles,
+            get_audio_tracks,
             create_collection,
             get_all_collections,
             get_collection_media,
@@ -864,6 +907,7 @@ fn main() {
             generate_thumbnail,
             init_vlc_player,
             play_in_vlc,
+            set_audio_track,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

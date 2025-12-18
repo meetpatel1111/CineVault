@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { PlayerControls } from './PlayerControls';
 import { subtitleService, SubtitleTrack } from '../../services/subtitleService';
+import { audioTrackService, AudioTrack } from '../../services/audioTrackService';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import './VideoPlayer.css';
 
@@ -34,22 +35,27 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [showControls, setShowControls] = useState(true);
   const [buffered, setBuffered] = useState(0);
   const [subtitles, setSubtitles] = useState<SubtitleTrack[]>([]);
+  const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
   const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
   const controlsTimeoutRef = useRef<number>();
 
   useEffect(() => {
     if (mediaId) {
-      loadSubtitles();
+      loadMediaInfo();
     }
   }, [mediaId]);
 
-  const loadSubtitles = async () => {
+  const loadMediaInfo = async () => {
     if (!mediaId) return;
     try {
-      const tracks = await subtitleService.getSubtitleTracks(mediaId);
-      setSubtitles(tracks);
+      const subTracks = await subtitleService.getSubtitleTracks(mediaId);
+      setSubtitles(subTracks);
+
+      const audTracks = await audioTrackService.getAudioTracks(mediaId);
+      setAudioTracks(audTracks);
+      console.log('Audio tracks available:', audTracks);
     } catch (err) {
-      console.error('Failed to load subtitles:', err);
+      console.error('Failed to load media info:', err);
     }
   };
 
@@ -171,10 +177,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const handleSubtitleToggle = () => {
-    // If we have active subtitles, turn them off
     if (activeSubtitle) {
       setActiveSubtitle(null);
-      // Disable all tracks
       if (videoRef.current) {
         Array.from(videoRef.current.textTracks).forEach(track => {
           track.mode = 'disabled';
@@ -183,14 +187,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       return;
     }
 
-    // Otherwise, find the first available track
     if (subtitles.length > 0) {
       const firstTrack = subtitles[0];
       const trackId = `track-${firstTrack.id}`;
       setActiveSubtitle(trackId);
 
       if (videoRef.current) {
-        // Find track by label/language or index
         const tracks = Array.from(videoRef.current.textTracks);
         const match = tracks.find(t => t.label === (firstTrack.label || firstTrack.language));
         if (match) {
@@ -303,6 +305,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         hasSubtitles={subtitles.length > 0}
         currentSubtitle={activeSubtitle}
       />
+      {/* TODO: Pass audio tracks to PlayerControls if we add UI there, or add a separate button overlay */}
     </div>
   );
 };
