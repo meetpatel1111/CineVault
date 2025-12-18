@@ -7,14 +7,18 @@ interface MainLayoutProps {
   children: React.ReactNode;
   onSearch?: (query: string) => void;
   onFilterChange?: (filter: 'all' | 'movie' | 'tv' | 'music') => void;
+  onSectionChange?: (section: string) => void;
   currentFilter?: 'all' | 'movie' | 'tv' | 'music';
+  currentSection?: string;
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ 
   children, 
   onSearch,
   onFilterChange,
-  currentFilter = 'all'
+  onSectionChange,
+  currentFilter = 'all',
+  currentSection
 }) => {
   // Map filter to section for initial state
   const filterToSection: Record<'all' | 'movie' | 'tv' | 'music', string> = {
@@ -24,17 +28,28 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     'music': 'music',
   };
   
-  const [activeSection, setActiveSection] = useState(filterToSection[currentFilter]);
+  const [activeSection, setActiveSection] = useState(
+    currentSection || filterToSection[currentFilter]
+  );
 
   // Sync active section when currentFilter changes from parent
   useEffect(() => {
-    setActiveSection(filterToSection[currentFilter]);
-  }, [currentFilter]);
+    if (currentSection) {
+      setActiveSection(currentSection);
+    } else {
+      setActiveSection(filterToSection[currentFilter]);
+    }
+  }, [currentFilter, currentSection]);
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
     console.log('Section changed to:', section);
     
+    // Notify parent about section change
+    if (onSectionChange) {
+      onSectionChange(section);
+    }
+
     // Map sections to filters
     const filterMap: Record<string, 'all' | 'movie' | 'tv' | 'music'> = {
       'home': 'all',

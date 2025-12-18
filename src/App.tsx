@@ -8,15 +8,18 @@ import {
   SettingsPanel,
   ToastContainer,
   useToast,
-  Dropdown,
   Badge,
   Spinner,
   VideoPlayer,
   AudioPlayer,
+  PlaylistList,
+  PlaylistDetail,
+  AddToPlaylistModal,
   type DropdownItem
 } from "./components";
 import { mediaService, type ScanProgress } from "./services/mediaService";
 import { playbackService } from "./services/playbackService";
+import { playlistService, type Playlist } from "./services/playlistService";
 import "./App.css";
 
 // Mock data for demonstration
@@ -85,7 +88,10 @@ function App() {
   const [filteredMediaItems, setFilteredMediaItems] = useState<any[]>(mockMediaItems);
   const [playingMedia, setPlayingMedia] = useState<any | null>(null);
   const [currentFilter, setCurrentFilter] = useState<'all' | 'movie' | 'tv' | 'music'>('all');
+  const [currentSection, setCurrentSection] = useState<string>('home');
+  const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [addToPlaylistMediaId, setAddToPlaylistMediaId] = useState<number | null>(null);
   const { toasts, removeToast, success, error, info } = useToast();
 
   async function loadDbStats() {
@@ -117,7 +123,25 @@ function App() {
     applyFilters(query, currentFilter);
   };
 
+  const handleSectionChange = (section: string) => {
+    setCurrentSection(section);
+    if (section === 'playlists') {
+      setSelectedPlaylist(null);
+    }
+  };
+
   const handleFilterChange = (filter: 'all' | 'movie' | 'tv' | 'music') => {
+    // If we're not on home/movies/tv/music section, switch to it
+    if (currentSection === 'playlists' || currentSection === 'collections') {
+      const filterToSection: Record<'all' | 'movie' | 'tv' | 'music', string> = {
+        'all': 'home',
+        'movie': 'movies',
+        'tv': 'tv',
+        'music': 'music',
+      };
+      setCurrentSection(filterToSection[filter]);
+    }
+
     setCurrentFilter(filter);
     applyFilters(searchQuery, filter);
   };
@@ -243,110 +267,137 @@ function App() {
     { id: 'delete', label: 'Remove from Library', icon: '🗑️', danger: true },
   ];
 
-  const handleMediaAction = (item: DropdownItem) => {
-    switch (item.id) {
+  const handleMediaAction = (actionItem: DropdownItem, mediaItem: any) => {
+    switch (actionItem.id) {
       case 'play':
-        success('Playing media...');
+        handleMediaClick(mediaItem);
         break;
       case 'info':
-        info('Opening details...');
+        info('Opening details... (TODO)');
         break;
       case 'playlist':
-        info('Added to playlist');
+        setAddToPlaylistMediaId(parseInt(mediaItem.id));
         break;
       case 'delete':
-        error('Removed from library');
+        error('Delete not implemented yet');
         break;
     }
   };
 
-  return (
-    <>
-      <MainLayout 
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        currentFilter={currentFilter}
-      >
-        <div className="app-content">
-          <section className="app-section">
-            <div className="app-section-header">
-              <div>
-                <h2 className="app-section-title">Welcome to CineVault</h2>
-                <p className="app-section-subtitle">
-                  {loading ? 'Loading...' : dbStats}
+  const renderContent = () => {
+    if (currentSection === 'playlists') {
+      if (selectedPlaylist) {
+        return (
+          <PlaylistDetail
+            playlist={selectedPlaylist}
+            onBack={() => setSelectedPlaylist(null)}
+            onPlayMedia={handleMediaClick}
+            onDeletePlaylist={async () => {
+              try {
+                await playlistService.deletePlaylist(selectedPlaylist.id);
+                setSelectedPlaylist(null);
+                success('Playlist deleted');
+              } catch (err) {
+                console.error(err);
+                error('Failed to delete playlist');
+              }
+            }}
+          />
+        );
+      }
+      return <PlaylistList onSelectPlaylist={setSelectedPlaylist} />;
+    }
+
+    // Default content (Home/Media)
+    return (
+      <div className="app-content">
+        <section className="app-section">
+          <div className="app-section-header">
+            <div>
+              <h2 className="app-section-title">Welcome to CineVault</h2>
+              <p className="app-section-subtitle">
+                {loading ? 'Loading...' : dbStats}
+              </p>
+              {scanProgress && (
+                <p className="app-section-subtitle" style={{ marginTop: 'var(--space-2)' }}>
+                  Scanning: {scanProgress.files_scanned} / {scanProgress.files_found} files - {scanProgress.current_file}
                 </p>
-                {scanProgress && (
-                  <p className="app-section-subtitle" style={{ marginTop: 'var(--space-2)' }}>
-                    Scanning: {scanProgress.files_scanned} / {scanProgress.files_found} files - {scanProgress.current_file}
-                  </p>
-                )}
-              </div>
-              <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
-                <Badge variant="info">Beta</Badge>
-                <Button 
-                  onClick={handleScanLibrary} 
-                  icon={scanning ? <Spinner size="sm" /> : <span>📁</span>}
-                  disabled={scanning}
-                  loading={scanning}
-                >
-                  {scanning ? 'Scanning...' : 'Scan Library'}
-                </Button>
-                <Dropdown
-                  trigger={
-                    <Button variant="secondary" icon={<span>⋮</span>}>
-                      Actions
-                    </Button>
-                  }
-                  items={mediaActions}
-                  onSelect={handleMediaAction}
-                  align="right"
-                />
-                <Button 
-                  variant="ghost" 
-                  icon={<span>⚙️</span>}
-                  onClick={() => setSettingsOpen(true)}
-                >
-                  Settings
-                </Button>
-              </div>
+              )}
             </div>
-          </section>
+            <div style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'center' }}>
+              <Badge variant="info">Beta</Badge>
+              <Button
+                onClick={handleScanLibrary}
+                icon={scanning ? <Spinner size="sm" /> : <span>📁</span>}
+                disabled={scanning}
+                loading={scanning}
+              >
+                {scanning ? 'Scanning...' : 'Scan Library'}
+              </Button>
+              {/* Global actions dropdown removed for now, or could keep for global context */}
+              <Button
+                variant="ghost"
+                icon={<span>⚙️</span>}
+                onClick={() => setSettingsOpen(true)}
+              >
+                Settings
+              </Button>
+            </div>
+          </div>
+        </section>
 
-          {!searchQuery && currentFilter === 'all' && (
-            <section className="app-section">
-              <div className="app-section-header">
-                <h2 className="app-section-title">Continue Watching</h2>
-                <Badge variant="warning">
-                  {mediaItems.filter(item => item.progress && item.progress > 0).length} in progress
-                </Badge>
-              </div>
-              <MediaGrid
-                items={mediaItems.filter(item => item.progress && item.progress > 0)}
-                onItemClick={handleMediaClick}
-                emptyMessage="No items in progress"
-              />
-            </section>
-          )}
-
+        {!searchQuery && currentFilter === 'all' && (
           <section className="app-section">
             <div className="app-section-header">
-              <h2 className="app-section-title">
-                {searchQuery ? `Search Results: "${searchQuery}"` : 
-                 currentFilter === 'all' ? 'Recently Added' : 
-                 currentFilter === 'movie' ? 'Movies' :
-                 currentFilter === 'tv' ? 'TV Shows' : 'Music'}
-              </h2>
-              <Badge variant="success">
-                {filteredMediaItems.length} items
+              <h2 className="app-section-title">Continue Watching</h2>
+              <Badge variant="warning">
+                {mediaItems.filter(item => item.progress && item.progress > 0).length} in progress
               </Badge>
             </div>
             <MediaGrid
-              items={filteredMediaItems}
+              items={mediaItems.filter(item => item.progress && item.progress > 0)}
               onItemClick={handleMediaClick}
-              emptyMessage={searchQuery ? "No results found" : "No media in your library yet. Click 'Scan Library' to get started!"}
+              onItemAction={handleMediaAction}
+              actionItems={mediaActions}
+              emptyMessage="No items in progress"
             />
           </section>
-        </div>
+        )}
+
+        <section className="app-section">
+          <div className="app-section-header">
+            <h2 className="app-section-title">
+              {searchQuery ? `Search Results: "${searchQuery}"` :
+               currentFilter === 'all' ? 'Recently Added' :
+               currentFilter === 'movie' ? 'Movies' :
+               currentFilter === 'tv' ? 'TV Shows' : 'Music'}
+            </h2>
+            <Badge variant="success">
+              {filteredMediaItems.length} items
+            </Badge>
+          </div>
+          <MediaGrid
+            items={filteredMediaItems}
+            onItemClick={handleMediaClick}
+            onItemAction={handleMediaAction}
+            actionItems={mediaActions}
+            emptyMessage={searchQuery ? "No results found" : "No media in your library yet. Click 'Scan Library' to get started!"}
+          />
+        </section>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <MainLayout
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onSectionChange={handleSectionChange}
+        currentFilter={currentFilter}
+        currentSection={currentSection}
+      >
+        {renderContent()}
       </MainLayout>
 
       <SettingsPanel 
@@ -355,6 +406,12 @@ function App() {
       />
 
       <ToastContainer toasts={toasts} onClose={removeToast} />
+
+      <AddToPlaylistModal
+        isOpen={addToPlaylistMediaId !== null}
+        onClose={() => setAddToPlaylistMediaId(null)}
+        mediaId={addToPlaylistMediaId || 0}
+      />
 
       {playingMedia && (
         playingMedia.type === 'music' ? (

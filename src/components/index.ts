@@ -22,3 +22,4 @@ export { SettingsPanel } from './Settings/SettingsPanel';
 // Player Components
 export { VideoPlayer } from './Player/VideoPlayer';
 export { AudioPlayer } from './Player/AudioPlayer';
+export * from './Playlist';

@@ -179,3 +179,4 @@
 .media-card__rating-value {
   font-weight: var(--font-weight-medium);
 }
+@import './MediaCardActions.css';

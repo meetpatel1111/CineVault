@@ -1,0 +1,55 @@
+.add-to-playlist__loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.add-to-playlist__empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: var(--space-4);
+}
+
+.add-to-playlist__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.add-to-playlist__item {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  color: var(--text-primary);
+  text-align: left;
+  transition: background-color 0.2s;
+}
+
+.add-to-playlist__item:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.add-to-playlist__item:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.add-to-playlist__icon {
+  margin-right: var(--space-3);
+  font-size: 1.2rem;
+}
+
+.add-to-playlist__name {
+  flex: 1;
+  font-weight: 500;
+}
+
+.add-to-playlist__count {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-right: var(--space-2);
+}

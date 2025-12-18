@@ -1,5 +1,6 @@
 import React from 'react';
 import { MediaCard } from './MediaCard';
+import { DropdownItem } from './Dropdown';
 import './MediaGrid.css';
 
 interface MediaItem {
@@ -17,12 +18,16 @@ interface MediaItem {
 interface MediaGridProps {
   items: MediaItem[];
   onItemClick?: (item: MediaItem) => void;
+  onItemAction?: (action: DropdownItem, item: MediaItem) => void;
+  actionItems?: DropdownItem[];
   emptyMessage?: string;
 }
 
 export const MediaGrid: React.FC<MediaGridProps> = ({
   items,
   onItemClick,
+  onItemAction,
+  actionItems,
   emptyMessage = 'No media found',
 }) => {
   if (items.length === 0) {
@@ -41,6 +46,8 @@ export const MediaGrid: React.FC<MediaGridProps> = ({
           key={item.id}
           {...item}
           onClick={() => onItemClick?.(item)}
+          onAction={onItemAction ? (action) => onItemAction(action, item) : undefined}
+          actionItems={actionItems}
         />
       ))}
     </div>
