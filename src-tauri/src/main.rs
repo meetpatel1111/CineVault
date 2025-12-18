@@ -604,6 +604,7 @@ async fn generate_thumbnail(
 }
 
 #[tauri::command]
+#[allow(unused_variables)]
 fn init_vlc_player(state: State<AppState>) -> Result<bool, String> {
     if cfg!(feature = "vlc") {
         #[cfg(feature = "vlc")]
@@ -629,6 +630,7 @@ fn init_vlc_player(state: State<AppState>) -> Result<bool, String> {
 }
 
 #[tauri::command]
+#[allow(unused_variables)]
 fn play_in_vlc(
     file_path: String,
     state: State<AppState>,

@@ -53,9 +53,11 @@ impl VlcPlayer {
 
 // Stub implementation when feature is disabled
 #[cfg(not(feature = "vlc"))]
+#[allow(dead_code)]
 pub struct VlcPlayer;
 
 #[cfg(not(feature = "vlc"))]
+#[allow(dead_code)]
 impl VlcPlayer {
     pub fn new() -> Option<Self> {
         None
