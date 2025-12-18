@@ -15,11 +15,15 @@ import {
   PlaylistList,
   PlaylistDetail,
   AddToPlaylistModal,
+  CollectionList,
+  CollectionDetail,
+  AddToCollectionModal,
   type DropdownItem
 } from "./components";
 import { mediaService, type ScanProgress } from "./services/mediaService";
 import { playbackService } from "./services/playbackService";
 import { playlistService, type Playlist } from "./services/playlistService";
+import { collectionService, type Collection } from "./services/collectionService";
 import "./App.css";
 
 // Mock data for demonstration
@@ -90,8 +94,10 @@ function App() {
   const [currentFilter, setCurrentFilter] = useState<'all' | 'movie' | 'tv' | 'music'>('all');
   const [currentSection, setCurrentSection] = useState<string>('home');
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
+  const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [addToPlaylistMediaId, setAddToPlaylistMediaId] = useState<number | null>(null);
+  const [addToCollectionMediaId, setAddToCollectionMediaId] = useState<number | null>(null);
   const { toasts, removeToast, success, error, info } = useToast();
 
   async function loadDbStats() {
@@ -127,6 +133,9 @@ function App() {
     setCurrentSection(section);
     if (section === 'playlists') {
       setSelectedPlaylist(null);
+    }
+    if (section === 'collections') {
+      setSelectedCollection(null);
     }
   };
 
@@ -263,6 +272,7 @@ function App() {
     { id: 'play', label: 'Play', icon: '▶️' },
     { id: 'info', label: 'View Details', icon: 'ℹ️' },
     { id: 'playlist', label: 'Add to Playlist', icon: '➕' },
+    { id: 'collection', label: 'Add to Collection', icon: '📚' },
     { id: 'separator', label: '', separator: true },
     { id: 'delete', label: 'Remove from Library', icon: '🗑️', danger: true },
   ];
@@ -277,6 +287,9 @@ function App() {
         break;
       case 'playlist':
         setAddToPlaylistMediaId(parseInt(mediaItem.id));
+        break;
+      case 'collection':
+        setAddToCollectionMediaId(parseInt(mediaItem.id));
         break;
       case 'delete':
         error('Delete not implemented yet');
@@ -306,6 +319,29 @@ function App() {
         );
       }
       return <PlaylistList onSelectPlaylist={setSelectedPlaylist} />;
+    }
+
+    if (currentSection === 'collections') {
+      if (selectedCollection) {
+        return (
+          <CollectionDetail
+            collection={selectedCollection}
+            onBack={() => setSelectedCollection(null)}
+            onPlayMedia={handleMediaClick}
+            onDeleteCollection={async () => {
+              try {
+                await collectionService.deleteCollection(selectedCollection.id);
+                setSelectedCollection(null);
+                success('Collection deleted');
+              } catch (err) {
+                console.error(err);
+                error('Failed to delete collection');
+              }
+            }}
+          />
+        );
+      }
+      return <CollectionList onSelectCollection={setSelectedCollection} />;
     }
 
     // Default content (Home/Media)
@@ -411,6 +447,12 @@ function App() {
         isOpen={addToPlaylistMediaId !== null}
         onClose={() => setAddToPlaylistMediaId(null)}
         mediaId={addToPlaylistMediaId || 0}
+      />
+
+      <AddToCollectionModal
+        isOpen={addToCollectionMediaId !== null}
+        onClose={() => setAddToCollectionMediaId(null)}
+        mediaId={addToCollectionMediaId || 0}
       />
 
       {playingMedia && (
