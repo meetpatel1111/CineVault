@@ -18,6 +18,7 @@ import {
   CollectionList,
   CollectionDetail,
   AddToCollectionModal,
+  SubtitleManagerModal,
   type DropdownItem
 } from "./components";
 import { mediaService, type ScanProgress } from "./services/mediaService";
