@@ -98,6 +98,8 @@ function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [addToPlaylistMediaId, setAddToPlaylistMediaId] = useState<number | null>(null);
   const [addToCollectionMediaId, setAddToCollectionMediaId] = useState<number | null>(null);
+  const [manageSubtitlesMediaId, setManageSubtitlesMediaId] = useState<number | null>(null);
+  const [manageSubtitlesMediaPath, setManageSubtitlesMediaPath] = useState<string>('');
   const { toasts, removeToast, success, error, info } = useToast();
 
   async function loadDbStats() {
@@ -271,6 +273,7 @@ function App() {
   const mediaActions: DropdownItem[] = [
     { id: 'play', label: 'Play', icon: '▶️' },
     { id: 'info', label: 'View Details', icon: 'ℹ️' },
+    { id: 'subtitles', label: 'Manage Subtitles', icon: '💬' },
     { id: 'playlist', label: 'Add to Playlist', icon: '➕' },
     { id: 'collection', label: 'Add to Collection', icon: '📚' },
     { id: 'separator', label: '', separator: true },
@@ -284,6 +287,10 @@ function App() {
         break;
       case 'info':
         info('Opening details... (TODO)');
+        break;
+      case 'subtitles':
+        setManageSubtitlesMediaId(parseInt(mediaItem.id));
+        setManageSubtitlesMediaPath(mediaItem.file_path);
         break;
       case 'playlist':
         setAddToPlaylistMediaId(parseInt(mediaItem.id));
@@ -455,6 +462,13 @@ function App() {
         mediaId={addToCollectionMediaId || 0}
       />
 
+      <SubtitleManagerModal
+        isOpen={manageSubtitlesMediaId !== null}
+        onClose={() => setManageSubtitlesMediaId(null)}
+        mediaId={manageSubtitlesMediaId || 0}
+        mediaPath={manageSubtitlesMediaPath}
+      />
+
       {playingMedia && (
         playingMedia.type === 'music' ? (
           <AudioPlayer
@@ -472,6 +486,7 @@ function App() {
             onProgress={handlePlayerProgress}
             initialPosition={playingMedia.resumePosition || 0}
             autoPlay
+            mediaId={parseInt(playingMedia.id)}
           />
         )
       )}

@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { PlayerControls } from './PlayerControls';
+import { subtitleService, SubtitleTrack } from '../../services/subtitleService';
+import { convertFileSrc } from '@tauri-apps/api/tauri';
 import './VideoPlayer.css';
 
 interface VideoPlayerProps {
@@ -9,6 +11,7 @@ interface VideoPlayerProps {
   onProgress?: (position: number, duration: number) => void;
   initialPosition?: number;
   autoPlay?: boolean;
+  mediaId?: number;
 }
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -18,6 +21,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   onProgress,
   initialPosition = 0,
   autoPlay = true,
+  mediaId,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(autoPlay);
@@ -29,7 +33,25 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [buffered, setBuffered] = useState(0);
+  const [subtitles, setSubtitles] = useState<SubtitleTrack[]>([]);
+  const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
   const controlsTimeoutRef = useRef<number>();
+
+  useEffect(() => {
+    if (mediaId) {
+      loadSubtitles();
+    }
+  }, [mediaId]);
+
+  const loadSubtitles = async () => {
+    if (!mediaId) return;
+    try {
+      const tracks = await subtitleService.getSubtitleTracks(mediaId);
+      setSubtitles(tracks);
+    } catch (err) {
+      console.error('Failed to load subtitles:', err);
+    }
+  };
 
   useEffect(() => {
     const video = videoRef.current;
@@ -148,6 +170,36 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setFullscreen(!fullscreen);
   };
 
+  const handleSubtitleToggle = () => {
+    // If we have active subtitles, turn them off
+    if (activeSubtitle) {
+      setActiveSubtitle(null);
+      // Disable all tracks
+      if (videoRef.current) {
+        Array.from(videoRef.current.textTracks).forEach(track => {
+          track.mode = 'disabled';
+        });
+      }
+      return;
+    }
+
+    // Otherwise, find the first available track
+    if (subtitles.length > 0) {
+      const firstTrack = subtitles[0];
+      const trackId = `track-${firstTrack.id}`;
+      setActiveSubtitle(trackId);
+
+      if (videoRef.current) {
+        // Find track by label/language or index
+        const tracks = Array.from(videoRef.current.textTracks);
+        const match = tracks.find(t => t.label === (firstTrack.label || firstTrack.language));
+        if (match) {
+          match.mode = 'showing';
+        }
+      }
+    }
+  };
+
   const handleMouseMove = () => {
     setShowControls(true);
     
@@ -218,7 +270,19 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         src={src}
         autoPlay={autoPlay}
         onClick={handlePlayPause}
-      />
+      >
+        {subtitles.map((track) => (
+          <track
+            key={track.id}
+            id={`track-${track.id}`}
+            kind="subtitles"
+            label={track.label || track.language || 'Unknown'}
+            srcLang={track.language || 'en'}
+            src={convertFileSrc(track.file_path)}
+            default={activeSubtitle === `track-${track.id}`}
+          />
+        ))}
+      </video>
 
       <PlayerControls
         playing={playing}
@@ -235,6 +299,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         onMuteToggle={handleMuteToggle}
         onPlaybackRateChange={handlePlaybackRateChange}
         onFullscreenToggle={handleFullscreenToggle}
+        onSubtitleToggle={handleSubtitleToggle}
+        hasSubtitles={subtitles.length > 0}
+        currentSubtitle={activeSubtitle}
       />
     </div>
   );
