@@ -1,4 +1,5 @@
 import React from 'react';
+import { Dropdown, DropdownItem } from './Dropdown';
 import './MediaCard.css';
 
 interface MediaCardProps {
@@ -11,6 +12,8 @@ interface MediaCardProps {
   progress?: number; // 0-100
   rating?: number; // 0-10
   onClick?: () => void;
+  onAction?: (action: DropdownItem) => void;
+  actionItems?: DropdownItem[];
 }
 
 export const MediaCard: React.FC<MediaCardProps> = ({
@@ -23,6 +26,8 @@ export const MediaCard: React.FC<MediaCardProps> = ({
   progress = 0,
   rating,
   onClick,
+  onAction,
+  actionItems,
 }) => {
   const formatDuration = (minutes?: number): string => {
     if (!minutes) return '';
@@ -74,9 +79,30 @@ export const MediaCard: React.FC<MediaCardProps> = ({
         )}
         
         <div className="media-card__overlay">
-          <button className="media-card__play-button">
+          <button
+            className="media-card__play-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick?.();
+            }}
+          >
             <PlayIcon />
           </button>
+
+          {onAction && actionItems && (
+            <div className="media-card__actions" onClick={(e) => e.stopPropagation()}>
+              <Dropdown
+                trigger={
+                  <button className="media-card__menu-button">
+                    <span>⋮</span>
+                  </button>
+                }
+                items={actionItems}
+                onSelect={onAction}
+                align="right"
+              />
+            </div>
+          )}
         </div>
       </div>
 
