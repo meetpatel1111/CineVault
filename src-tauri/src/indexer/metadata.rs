@@ -178,6 +178,39 @@ pub enum MetadataError {
     ExtractionFailed(String),
 }
 
+/// Generate a thumbnail for a video file using FFmpeg
+#[allow(dead_code)]
+pub fn generate_thumbnail<P: AsRef<Path>>(
+    video_path: P,
+    output_path: P,
+    time: f64,
+) -> Result<(), MetadataError> {
+    let video_path = video_path.as_ref();
+    let output_path = output_path.as_ref();
+
+    let output = Command::new("ffmpeg")
+        .args([
+            "-y", // Overwrite output
+            "-ss", &time.to_string(), // Seek to time
+            "-i", video_path.to_str().ok_or(MetadataError::ExtractionFailed("Invalid path".into()))?,
+            "-vframes", "1", // Extract 1 frame
+            "-vf", "scale=320:-1", // Resize to width 320, keep aspect ratio
+            output_path.to_str().ok_or(MetadataError::ExtractionFailed("Invalid output path".into()))?,
+        ])
+        .output()
+        .map_err(|e| MetadataError::ExtractionFailed(format!("Failed to run ffmpeg: {}", e)))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(MetadataError::ExtractionFailed(format!(
+            "ffmpeg failed: {}",
+            stderr
+        )));
+    }
+
+    Ok(())
+}
+
 /// FFProbe JSON output structure
 #[derive(Debug, Deserialize)]
 struct FFProbeOutput {
