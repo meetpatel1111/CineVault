@@ -1,8 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '../Button';
-import { Input } from '../Input';
-import { Dropdown } from '../Dropdown';
-import type { PlaylistRule } from '../../services/playlistService';
 import './RuleEditor.css';
 
 // We use a partial rule for editing before it's saved to DB
