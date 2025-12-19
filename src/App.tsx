@@ -19,6 +19,7 @@ import {
   CollectionDetail,
   AddToCollectionModal,
   SubtitleManagerModal,
+  MetadataEditorModal,
   type DropdownItem
 } from "./components";
 import FilterPanel from "./components/FilterPanel";
@@ -104,6 +105,7 @@ function App() {
   const [addToCollectionMediaId, setAddToCollectionMediaId] = useState<number | null>(null);
   const [manageSubtitlesMediaId, setManageSubtitlesMediaId] = useState<number | null>(null);
   const [manageSubtitlesMediaPath, setManageSubtitlesMediaPath] = useState<string>('');
+  const [editMetadataMedia, setEditMetadataMedia] = useState<any | null>(null);
   const { toasts, removeToast, success, error, info } = useToast();
 
   async function loadDbStats() {
@@ -296,6 +298,7 @@ function App() {
   const mediaActions: DropdownItem[] = [
     { id: 'play', label: 'Play', icon: '▶️' },
     { id: 'info', label: 'View Details', icon: 'ℹ️' },
+    { id: 'edit', label: 'Edit Metadata', icon: '✏️' },
     { id: 'subtitles', label: 'Manage Subtitles', icon: '💬' },
     { id: 'playlist', label: 'Add to Playlist', icon: '➕' },
     { id: 'collection', label: 'Add to Collection', icon: '📚' },
@@ -310,6 +313,11 @@ function App() {
         break;
       case 'info':
         info('Opening details... (TODO)');
+        break;
+      case 'edit':
+        // We need the full media object, let's find it in mediaItems if mediaItem is partial
+        const fullItem = mediaItems.find(m => m.id === mediaItem.id) || mediaItem;
+        setEditMetadataMedia(fullItem);
         break;
       case 'subtitles':
         setManageSubtitlesMediaId(parseInt(mediaItem.id));
@@ -514,6 +522,20 @@ function App() {
         mediaId={manageSubtitlesMediaId || 0}
         mediaPath={manageSubtitlesMediaPath}
       />
+
+      {editMetadataMedia && (
+        <MetadataEditorModal
+          isOpen={true}
+          onClose={() => setEditMetadataMedia(null)}
+          media={editMetadataMedia}
+          onSave={async (metadata) => {
+             await mediaService.updateMetadata(parseInt(editMetadataMedia.id), metadata);
+             success("Metadata updated");
+             // Refresh library
+             await loadMedia();
+          }}
+        />
+      )}
 
       {playingMedia && (
         playingMedia.type === 'music' ? (

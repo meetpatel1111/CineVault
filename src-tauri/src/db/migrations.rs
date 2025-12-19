@@ -12,9 +12,9 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
     }
     
     // Future migrations go here
-    // if current_version < 2 {
-    //     migrate_v2(conn)?;
-    // }
+    if current_version < 2 {
+        migrate_v2(conn)?;
+    }
     
     Ok(())
 }
@@ -69,6 +69,23 @@ fn migrate_v1(conn: &Connection) -> Result<()> {
     insert_default_settings(conn)?;
     
     println!("Migration v1 completed successfully");
+    Ok(())
+}
+
+/// Migration v2: Add is_locked to media_files
+fn migrate_v2(conn: &Connection) -> Result<()> {
+    println!("Running migration: v2 - Add is_locked column");
+
+    // Add is_locked column with default false (0)
+    let _ = conn.execute(
+        "ALTER TABLE media_files ADD COLUMN is_locked BOOLEAN NOT NULL DEFAULT 0",
+        [],
+    );
+
+    // Set schema version
+    set_schema_version(conn, 2)?;
+
+    println!("Migration v2 completed successfully");
     Ok(())
 }
 

@@ -23,6 +23,7 @@ export interface MediaFile {
   last_modified: string;
   is_deleted: boolean;
   metadata_json?: string;
+  is_locked?: boolean;
 }
 
 export interface ScanProgress {
@@ -100,6 +101,26 @@ export const mediaService = {
    */
   async filterMedia(criteria: FilterCriteria): Promise<MediaFile[]> {
     return invoke<MediaFile[]>('filter_media', { criteria });
+  },
+
+  /**
+   * Update media metadata
+   */
+  async updateMetadata(
+    mediaId: number,
+    metadata: {
+      title?: string;
+      year?: number;
+      season?: number;
+      episode?: number;
+      description?: string;
+      posterUrl?: string;
+    }
+  ): Promise<void> {
+    return invoke('update_media_metadata', {
+      mediaId,
+      ...metadata
+    });
   },
 
   /**

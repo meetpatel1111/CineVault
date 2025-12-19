@@ -84,6 +84,8 @@ pub struct MediaFile {
     
     // Metadata
     pub metadata_json: Option<String>,
+    #[serde(default)]
+    pub is_locked: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

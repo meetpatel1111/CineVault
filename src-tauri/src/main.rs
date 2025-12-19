@@ -790,6 +790,33 @@ fn import_database(
 }
 
 #[tauri::command]
+fn update_media_metadata(
+    media_id: i64,
+    title: Option<String>,
+    year: Option<i32>,
+    season: Option<i32>,
+    episode: Option<i32>,
+    description: Option<String>,
+    poster_url: Option<String>,
+    state: State<AppState>,
+) -> Result<(), String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::update_media_metadata(
+        &conn,
+        media_id,
+        title,
+        year,
+        season,
+        episode,
+        description,
+        poster_url,
+    ).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn extract_all_metadata(
     state: State<'_, AppState>,
     window: tauri::Window,
@@ -957,6 +984,7 @@ fn main() {
             get_watch_stats,
             get_watch_history_chart,
             get_media_type_distribution,
+            update_media_metadata,
             extract_metadata,
             extract_all_metadata,
             add_subtitle_track,
