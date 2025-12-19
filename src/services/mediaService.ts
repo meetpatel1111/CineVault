@@ -39,6 +39,16 @@ export interface ScanResult {
   errors: number;
 }
 
+export interface FilterCriteria {
+  min_year?: number;
+  max_year?: number;
+  min_duration?: number;
+  max_duration?: number;
+  resolutions?: string[];
+  codecs?: string[];
+  media_types?: string[];
+}
+
 export const mediaService = {
   /**
    * Scan a directory for media files
@@ -83,6 +93,13 @@ export const mediaService = {
    */
   async searchMedia(query: string): Promise<MediaFile[]> {
     return invoke<MediaFile[]>('search_media', { query });
+  },
+
+  /**
+   * Filter media files
+   */
+  async filterMedia(criteria: FilterCriteria): Promise<MediaFile[]> {
+    return invoke<MediaFile[]>('filter_media', { criteria });
   },
 
   /**

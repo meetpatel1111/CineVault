@@ -21,8 +21,9 @@ import {
   SubtitleManagerModal,
   type DropdownItem
 } from "./components";
+import FilterPanel from "./components/FilterPanel";
 import { AnalyticsDashboard } from "./components/Analytics/AnalyticsDashboard";
-import { mediaService, type ScanProgress } from "./services/mediaService";
+import { mediaService, type ScanProgress, type FilterCriteria } from "./services/mediaService";
 import { playbackService } from "./services/playbackService";
 import { playlistService, type Playlist } from "./services/playlistService";
 import { collectionService, type Collection } from "./services/collectionService";
@@ -94,6 +95,7 @@ function App() {
   const [filteredMediaItems, setFilteredMediaItems] = useState<any[]>(mockMediaItems);
   const [playingMedia, setPlayingMedia] = useState<any | null>(null);
   const [currentFilter, setCurrentFilter] = useState<'all' | 'movie' | 'tv' | 'music'>('all');
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [currentSection, setCurrentSection] = useState<string>('home');
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
@@ -159,7 +161,7 @@ function App() {
     applyFilters(searchQuery, filter);
   };
 
-  const applyFilters = (query: string, filter: 'all' | 'movie' | 'tv' | 'music') => {
+  const applyFilters = async (query: string, filter: 'all' | 'movie' | 'tv' | 'music') => {
     let filtered = [...mediaItems];
 
     // Apply type filter
@@ -177,6 +179,25 @@ function App() {
     }
 
     setFilteredMediaItems(filtered);
+  };
+
+  const handleAdvancedFilter = async (criteria: FilterCriteria) => {
+    try {
+      setLoading(true);
+      const filteredFiles = await mediaService.filterMedia(criteria);
+      const displayItems = filteredFiles.map(f => mediaService.toDisplayFormat(f));
+      setFilteredMediaItems(displayItems);
+      // We also update mediaItems if we want to search within these results,
+      // but usually advanced filter replaces the current view.
+      // However, for consistency with search, we might want to keep base list.
+      // For now, let's just update filtered list and show a toast.
+      success(`Found ${displayItems.length} items`);
+    } catch (err) {
+      console.error("Filter error:", err);
+      error("Failed to apply filters");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -383,6 +404,13 @@ function App() {
               >
                 {scanning ? 'Scanning...' : 'Scan Library'}
               </Button>
+              <Button
+                variant={showFilterPanel ? "secondary" : "ghost"}
+                icon={<span>🔍</span>}
+                onClick={() => setShowFilterPanel(!showFilterPanel)}
+              >
+                Filter
+              </Button>
               {/* Global actions dropdown removed for now, or could keep for global context */}
               <Button
                 variant="ghost"
@@ -395,7 +423,19 @@ function App() {
           </div>
         </section>
 
-        {!searchQuery && currentFilter === 'all' && (
+        {showFilterPanel && (
+          <section className="app-section">
+            <FilterPanel
+              onFilter={handleAdvancedFilter}
+              onClear={() => {
+                applyFilters(searchQuery, currentFilter);
+                success("Filters cleared");
+              }}
+            />
+          </section>
+        )}
+
+        {!searchQuery && currentFilter === 'all' && !showFilterPanel && (
           <section className="app-section">
             <div className="app-section-header">
               <h2 className="app-section-title">Continue Watching</h2>

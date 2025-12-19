@@ -179,6 +179,18 @@ fn get_media_by_type(
 }
 
 #[tauri::command]
+fn filter_media(
+    criteria: db::FilterCriteria,
+    state: State<AppState>,
+) -> Result<Vec<db::MediaFile>, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::filter_media(&conn, &criteria).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn search_media(query: String, state: State<AppState>) -> Result<Vec<db::MediaFile>, String> {
     let db = state.db.lock().unwrap();
     let conn = db.connection();
@@ -935,6 +947,7 @@ fn main() {
             scan_directory,
             get_all_media,
             get_media_by_type,
+            filter_media,
             search_media,
             update_playback_position,
             mark_as_completed,

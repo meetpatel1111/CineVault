@@ -203,3 +203,15 @@ pub struct Setting {
     pub value: String,
     pub updated_at: String,
 }
+
+/// Filter criteria for media search
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FilterCriteria {
+    pub min_year: Option<i32>,
+    pub max_year: Option<i32>,
+    pub min_duration: Option<i64>,
+    pub max_duration: Option<i64>,
+    pub resolutions: Option<Vec<String>>, // "4k", "1080p", "720p", "sd"
+    pub codecs: Option<Vec<String>>,
+    pub media_types: Option<Vec<String>>,
+}
