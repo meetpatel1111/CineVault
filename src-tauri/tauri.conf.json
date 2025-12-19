@@ -55,6 +55,9 @@
       "externalBin": [
         "ffmpeg",
         "ffprobe"
+      ],
+      "resources": [
+        "vlc/**"
       ]
     },
     "security": {
