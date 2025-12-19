@@ -269,6 +269,7 @@ mod tests {
             last_modified: Utc::now().to_rfc3339(),
             is_deleted: false,
             metadata_json: None,
+            is_locked: false,
         };
         add_media_file(conn, &media)
     }

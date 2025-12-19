@@ -92,7 +92,7 @@ mod tests {
             media_type: MediaType::Movie,
             duration: None, codec: None, resolution: None, bitrate: None, framerate: None, audio_codec: None, audio_channels: None,
             title: None, year: None, season_number: None, episode_number: None,
-            indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None,
+            indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None, is_locked: false,
         };
         let media_id = add_media_file(&conn, &media)?;
 
