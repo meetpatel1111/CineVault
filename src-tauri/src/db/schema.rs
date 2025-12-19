@@ -4,7 +4,7 @@
 /// functionality and optional TMDB integration.
 /// Core schema version
 #[allow(dead_code)]
-pub const SCHEMA_VERSION: i32 = 1;
+pub const SCHEMA_VERSION: i32 = 2;
 
 /// Core tables for media management
 pub const CORE_SCHEMA: &str = r#"

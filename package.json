@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run deps",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
     "generate-icons": "node tmp_rovodev_generate_icons.js",
     "generate-icns": "node tmp_rovodev_generate_icns.js",
-    "generate-all-icons": "npm run generate-icons && npm run generate-icns"
+    "generate-all-icons": "npm run generate-icons && npm run generate-icns",
+    "deps": "node scripts/download-deps.js"
   },
   "dependencies": {
     "png2icons": "^2.0.1",

@@ -495,6 +495,7 @@ mod tests {
             last_modified: Utc::now().to_rfc3339(),
             is_deleted: false,
             metadata_json: None,
+            is_locked: false,
         };
         add_media_file(conn, &media)
     }
@@ -575,7 +576,7 @@ mod tests {
             duration: Some(100),
             codec: None, resolution: None, bitrate: None, framerate: None, audio_codec: None, audio_channels: None,
             year: Some(2023), season_number: None, episode_number: None,
-            indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None,
+            indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None, is_locked: false,
             id: None,
         };
         add_media_file(&conn, &media1)?;
@@ -590,7 +591,7 @@ mod tests {
             duration: Some(100),
             codec: None, resolution: None, bitrate: None, framerate: None, audio_codec: None, audio_channels: None,
             year: Some(2020), season_number: None, episode_number: None,
-            indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None,
+            indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None, is_locked: false,
             id: None,
         };
         add_media_file(&conn, &media2)?;
@@ -635,7 +636,7 @@ mod tests {
             media_type: MediaType::Movie,
             file_path: "/test/1.mp4".to_string(), file_hash: "h1".to_string(), file_name: "1.mp4".to_string(), file_size: 1, duration: Some(100),
             codec: None, resolution: None, bitrate: None, framerate: None, audio_codec: None, audio_channels: None,
-            season_number: None, episode_number: None, indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None, id: None,
+            season_number: None, episode_number: None, indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None, is_locked: false, id: None,
         };
         add_media_file(&conn, &m1)?;
 
@@ -645,7 +646,7 @@ mod tests {
             media_type: MediaType::Movie,
             file_path: "/test/2.mp4".to_string(), file_hash: "h2".to_string(), file_name: "2.mp4".to_string(), file_size: 1, duration: Some(100),
             codec: None, resolution: None, bitrate: None, framerate: None, audio_codec: None, audio_channels: None,
-            season_number: None, episode_number: None, indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None, id: None,
+            season_number: None, episode_number: None, indexed_at: Utc::now().to_rfc3339(), last_modified: Utc::now().to_rfc3339(), is_deleted: false, metadata_json: None, is_locked: false, id: None,
         };
         add_media_file(&conn, &m2)?;
 

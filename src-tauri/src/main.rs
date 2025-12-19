@@ -122,6 +122,7 @@ async fn scan_directory(
                 .unwrap_or_else(|| Utc::now().to_rfc3339()),
             is_deleted: false,
             metadata_json: None,
+            is_locked: false,
         };
         
         // Insert or update in database

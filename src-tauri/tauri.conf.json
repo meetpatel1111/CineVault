@@ -15,7 +15,9 @@
       "all": false,
       "shell": {
         "all": false,
-        "open": true
+        "open": true,
+        "execute": true,
+        "sidecar": true
       },
       "fs": {
         "all": true,
@@ -49,7 +51,21 @@
         "icons/128x128.png",
         "icons/128x128@2x.png",
         "icons/icon.png"
-      ]
+      ],
+      "externalBin": [
+        "ffmpeg",
+        "ffprobe"
+      ],
+      "resources": [
+        "vlc/**"
+      ],
+      "deb": {
+        "depends": [
+          "vlc",
+          "libvlc5",
+          "ffmpeg"
+        ]
+      }
     },
     "security": {
       "csp": null
