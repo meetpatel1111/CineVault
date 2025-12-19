@@ -25,3 +25,4 @@ export { AudioPlayer } from './Player/AudioPlayer';
 export * from './Playlist';
 export * from './Collection';
 export * from './Subtitle';
+export { MetadataEditorModal } from './Media/MetadataEditorModal';

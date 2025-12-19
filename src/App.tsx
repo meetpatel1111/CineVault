@@ -19,10 +19,12 @@ import {
   CollectionDetail,
   AddToCollectionModal,
   SubtitleManagerModal,
+  MetadataEditorModal,
   type DropdownItem
 } from "./components";
+import FilterPanel from "./components/FilterPanel";
 import { AnalyticsDashboard } from "./components/Analytics/AnalyticsDashboard";
-import { mediaService, type ScanProgress } from "./services/mediaService";
+import { mediaService, type ScanProgress, type FilterCriteria } from "./services/mediaService";
 import { playbackService } from "./services/playbackService";
 import { playlistService, type Playlist } from "./services/playlistService";
 import { collectionService, type Collection } from "./services/collectionService";
@@ -94,6 +96,7 @@ function App() {
   const [filteredMediaItems, setFilteredMediaItems] = useState<any[]>(mockMediaItems);
   const [playingMedia, setPlayingMedia] = useState<any | null>(null);
   const [currentFilter, setCurrentFilter] = useState<'all' | 'movie' | 'tv' | 'music'>('all');
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [currentSection, setCurrentSection] = useState<string>('home');
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
   const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
@@ -102,6 +105,7 @@ function App() {
   const [addToCollectionMediaId, setAddToCollectionMediaId] = useState<number | null>(null);
   const [manageSubtitlesMediaId, setManageSubtitlesMediaId] = useState<number | null>(null);
   const [manageSubtitlesMediaPath, setManageSubtitlesMediaPath] = useState<string>('');
+  const [editMetadataMedia, setEditMetadataMedia] = useState<any | null>(null);
   const { toasts, removeToast, success, error, info } = useToast();
 
   async function loadDbStats() {
@@ -159,7 +163,7 @@ function App() {
     applyFilters(searchQuery, filter);
   };
 
-  const applyFilters = (query: string, filter: 'all' | 'movie' | 'tv' | 'music') => {
+  const applyFilters = async (query: string, filter: 'all' | 'movie' | 'tv' | 'music') => {
     let filtered = [...mediaItems];
 
     // Apply type filter
@@ -177,6 +181,25 @@ function App() {
     }
 
     setFilteredMediaItems(filtered);
+  };
+
+  const handleAdvancedFilter = async (criteria: FilterCriteria) => {
+    try {
+      setLoading(true);
+      const filteredFiles = await mediaService.filterMedia(criteria);
+      const displayItems = filteredFiles.map(f => mediaService.toDisplayFormat(f));
+      setFilteredMediaItems(displayItems);
+      // We also update mediaItems if we want to search within these results,
+      // but usually advanced filter replaces the current view.
+      // However, for consistency with search, we might want to keep base list.
+      // For now, let's just update filtered list and show a toast.
+      success(`Found ${displayItems.length} items`);
+    } catch (err) {
+      console.error("Filter error:", err);
+      error("Failed to apply filters");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -275,6 +298,7 @@ function App() {
   const mediaActions: DropdownItem[] = [
     { id: 'play', label: 'Play', icon: '▶️' },
     { id: 'info', label: 'View Details', icon: 'ℹ️' },
+    { id: 'edit', label: 'Edit Metadata', icon: '✏️' },
     { id: 'subtitles', label: 'Manage Subtitles', icon: '💬' },
     { id: 'playlist', label: 'Add to Playlist', icon: '➕' },
     { id: 'collection', label: 'Add to Collection', icon: '📚' },
@@ -289,6 +313,11 @@ function App() {
         break;
       case 'info':
         info('Opening details... (TODO)');
+        break;
+      case 'edit':
+        // We need the full media object, let's find it in mediaItems if mediaItem is partial
+        const fullItem = mediaItems.find(m => m.id === mediaItem.id) || mediaItem;
+        setEditMetadataMedia(fullItem);
         break;
       case 'subtitles':
         setManageSubtitlesMediaId(parseInt(mediaItem.id));
@@ -383,6 +412,13 @@ function App() {
               >
                 {scanning ? 'Scanning...' : 'Scan Library'}
               </Button>
+              <Button
+                variant={showFilterPanel ? "secondary" : "ghost"}
+                icon={<span>🔍</span>}
+                onClick={() => setShowFilterPanel(!showFilterPanel)}
+              >
+                Filter
+              </Button>
               {/* Global actions dropdown removed for now, or could keep for global context */}
               <Button
                 variant="ghost"
@@ -395,7 +431,19 @@ function App() {
           </div>
         </section>
 
-        {!searchQuery && currentFilter === 'all' && (
+        {showFilterPanel && (
+          <section className="app-section">
+            <FilterPanel
+              onFilter={handleAdvancedFilter}
+              onClear={() => {
+                applyFilters(searchQuery, currentFilter);
+                success("Filters cleared");
+              }}
+            />
+          </section>
+        )}
+
+        {!searchQuery && currentFilter === 'all' && !showFilterPanel && (
           <section className="app-section">
             <div className="app-section-header">
               <h2 className="app-section-title">Continue Watching</h2>
@@ -474,6 +522,20 @@ function App() {
         mediaId={manageSubtitlesMediaId || 0}
         mediaPath={manageSubtitlesMediaPath}
       />
+
+      {editMetadataMedia && (
+        <MetadataEditorModal
+          isOpen={true}
+          onClose={() => setEditMetadataMedia(null)}
+          media={editMetadataMedia}
+          onSave={async (metadata) => {
+             await mediaService.updateMetadata(parseInt(editMetadataMedia.id), metadata);
+             success("Metadata updated");
+             // Refresh library
+             await loadMedia();
+          }}
+        />
+      )}
 
       {playingMedia && (
         playingMedia.type === 'music' ? (
