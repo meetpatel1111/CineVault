@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { PlayerControls } from './PlayerControls';
 import { subtitleService, SubtitleTrack } from '../../services/subtitleService';
-import { audioTrackService } from '../../services/audioTrackService';
+import { audioTrackService, AudioTrack } from '../../services/audioTrackService';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import './VideoPlayer.css';
 
@@ -35,6 +35,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [showControls, setShowControls] = useState(true);
   const [buffered, setBuffered] = useState(0);
   const [subtitles, setSubtitles] = useState<SubtitleTrack[]>([]);
+  const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
+  const [activeAudioTrack, setActiveAudioTrack] = useState<number | null>(null);
   const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
   const controlsTimeoutRef = useRef<number>();
 
@@ -51,8 +53,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       setSubtitles(subTracks);
 
       const audTracks = await audioTrackService.getAudioTracks(mediaId);
-      // Just log for now until UI is ready
-      console.log('Audio tracks available:', audTracks);
+      setAudioTracks(audTracks);
+
+      // Determine active track (default)
+      const defaultTrack = audTracks.find(t => t.is_default);
+      if (defaultTrack) {
+        setActiveAudioTrack(defaultTrack.id);
+      } else if (audTracks.length > 0) {
+        setActiveAudioTrack(audTracks[0].id);
+      }
     } catch (err) {
       console.error('Failed to load media info:', err);
     }
@@ -201,6 +210,23 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
+  const handleAudioTrackToggle = async () => {
+    if (audioTracks.length <= 1) return;
+
+    // Find current index
+    const currentIndex = audioTracks.findIndex(t => t.id === activeAudioTrack);
+    const nextIndex = (currentIndex + 1) % audioTracks.length;
+    const nextTrack = audioTracks[nextIndex];
+
+    setActiveAudioTrack(nextTrack.id);
+
+    try {
+      await audioTrackService.setAudioTrack(nextIndex);
+    } catch (e) {
+      console.error("Failed to switch audio track", e);
+    }
+  };
+
   const handleMouseMove = () => {
     setShowControls(true);
     
@@ -303,8 +329,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         onSubtitleToggle={handleSubtitleToggle}
         hasSubtitles={subtitles.length > 0}
         currentSubtitle={activeSubtitle}
+        onAudioTrackToggle={handleAudioTrackToggle}
+        hasAudioTracks={audioTracks.length > 1}
       />
-      {/* TODO: Pass audio tracks to PlayerControls if we add UI there, or add a separate button overlay */}
     </div>
   );
 };

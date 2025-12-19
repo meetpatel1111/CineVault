@@ -19,6 +19,8 @@ interface PlayerControlsProps {
   onSubtitleToggle?: () => void;
   hasSubtitles?: boolean;
   currentSubtitle?: string | null;
+  onAudioTrackToggle?: () => void;
+  hasAudioTracks?: boolean;
 }
 
 export const PlayerControls: React.FC<PlayerControlsProps> = ({
@@ -39,6 +41,8 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
   onSubtitleToggle,
   hasSubtitles,
   currentSubtitle,
+  onAudioTrackToggle,
+  hasAudioTracks,
 }) => {
   const formatTime = (seconds: number): string => {
     if (isNaN(seconds)) return '0:00';
@@ -107,6 +111,16 @@ export const PlayerControls: React.FC<PlayerControlsProps> = ({
             </button>
           )}
 
+          {hasAudioTracks && (
+            <button
+              className="player-controls__button"
+              onClick={onAudioTrackToggle}
+              title="Audio Tracks"
+            >
+              <AudioTrackIcon />
+            </button>
+          )}
+
           <div className="player-controls__speed">
             <select
               value={playbackRate}
@@ -164,5 +178,11 @@ const FullscreenIcon = () => (
 const SubtitleIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
     <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 12h4v2H4v-2zm0 4h4v2H4v-2zm6 0h4v2h-4v-2zm6 0h4v2h-4v-2zm0-4h4v2h-4v-2zm-6 0h4v2h-4v-2zm0-4h4v2h-4V8zm6 0h4v2h-4V8z" />
+  </svg>
+);
+
+const AudioTrackIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z" />
   </svg>
 );
