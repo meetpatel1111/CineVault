@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '../Modal';
 import { Button } from '../Button';
 import { Input } from '../Input';
+import { systemService, DependencyStatus } from '../../services/systemService';
+import { useToast } from '../Toast';
 import './SettingsPanel.css';
 
 interface SettingsPanelProps {
@@ -70,81 +72,151 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
   );
 };
 
-const GeneralSettings: React.FC = () => (
-  <div className="settings-section">
-    <h3 className="settings-section__title">General Settings</h3>
-    
-    <div className="settings-group">
-      <label className="settings-label">Theme</label>
-      <select className="settings-select">
-        <option value="dark">Dark</option>
-        <option value="light">Light</option>
-        <option value="auto">Auto</option>
-      </select>
-      <p className="settings-help">Choose your preferred color theme</p>
-    </div>
+const GeneralSettings: React.FC = () => {
+  const [status, setStatus] = useState<DependencyStatus>({ ffmpeg: false, vlc: false });
 
-    <div className="settings-group">
-      <label className="settings-label">
-        <input type="checkbox" defaultChecked />
-        <span>Start on system startup</span>
-      </label>
-    </div>
+  useEffect(() => {
+    systemService.checkDependencies().then(setStatus).catch(console.error);
+  }, []);
 
-    <div className="settings-group">
-      <label className="settings-label">
-        <input type="checkbox" defaultChecked />
-        <span>Minimize to system tray</span>
-      </label>
-    </div>
-  </div>
-);
+  return (
+    <div className="settings-section">
+      <h3 className="settings-section__title">General Settings</h3>
 
-const LibrarySettings: React.FC = () => (
-  <div className="settings-section">
-    <h3 className="settings-section__title">Library Settings</h3>
-    
-    <div className="settings-group">
-      <label className="settings-label">Library Paths</label>
-      <div className="settings-path-list">
-        <div className="settings-path-item">
-          <span>/Users/username/Movies</span>
-          <button className="settings-path-remove">Remove</button>
-        </div>
-        <div className="settings-path-item">
-          <span>/Users/username/TV Shows</span>
-          <button className="settings-path-remove">Remove</button>
-        </div>
+      <div className="settings-group">
+        <label className="settings-label">Theme</label>
+        <select className="settings-select">
+          <option value="dark">Dark</option>
+          <option value="light">Light</option>
+          <option value="auto">Auto</option>
+        </select>
+        <p className="settings-help">Choose your preferred color theme</p>
       </div>
-      <Button variant="secondary" size="sm">
-        Add Folder
-      </Button>
-    </div>
 
-    <div className="settings-group">
-      <label className="settings-label">Auto-scan interval</label>
-      <select className="settings-select">
-        <option value="300">5 minutes</option>
-        <option value="900">15 minutes</option>
-        <option value="3600">1 hour</option>
-        <option value="0">Disabled</option>
-      </select>
-    </div>
+      <div className="settings-group">
+        <label className="settings-label">System Health</label>
+        <div className="settings-status-list">
+          <div className="settings-status-item">
+            <span className="settings-status-label">FFmpeg</span>
+            <span className={`settings-status-value ${status.ffmpeg ? 'success' : 'error'}`}>
+              {status.ffmpeg ? 'Detected' : 'Not Detected'}
+            </span>
+          </div>
+          <div className="settings-status-item">
+            <span className="settings-status-label">LibVLC</span>
+            <span className={`settings-status-value ${status.vlc ? 'success' : 'error'}`}>
+              {status.vlc ? 'Detected' : 'Not Detected'}
+            </span>
+          </div>
+        </div>
+        <p className="settings-help">FFmpeg is required for thumbnails. LibVLC is required for advanced playback.</p>
+      </div>
 
-    <div className="settings-group">
-      <label className="settings-label">
-        <input type="checkbox" defaultChecked />
-        <span>Watch for file changes</span>
-      </label>
-      <p className="settings-help">Automatically update library when files are added or removed</p>
+      <div className="settings-group">
+        <label className="settings-label">
+          <input type="checkbox" defaultChecked />
+          <span>Start on system startup</span>
+        </label>
+      </div>
+
+      <div className="settings-group">
+        <label className="settings-label">
+          <input type="checkbox" defaultChecked />
+          <span>Minimize to system tray</span>
+        </label>
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+const LibrarySettings: React.FC = () => {
+  const { success, error, info } = useToast();
+  const [extracting, setExtracting] = useState(false);
+
+  const handleRefreshMetadata = async () => {
+    if (confirm('This will rescan all files for metadata. It may take a while. Continue?')) {
+      setExtracting(true);
+      info('Starting metadata refresh...');
+      try {
+        const result = await systemService.extractAllMetadata();
+        success(`Metadata updated. Processed: ${result.processed}, Updated: ${result.updated}, Errors: ${result.errors}`);
+      } catch (err) {
+        console.error(err);
+        error('Failed to refresh metadata');
+      } finally {
+        setExtracting(false);
+      }
+    }
+  };
+
+  return (
+    <div className="settings-section">
+      <h3 className="settings-section__title">Library Settings</h3>
+
+      <div className="settings-group">
+        <label className="settings-label">Library Paths</label>
+        <div className="settings-path-list">
+          <div className="settings-path-item">
+            <span>/Users/username/Movies</span>
+            <button className="settings-path-remove">Remove</button>
+          </div>
+          <div className="settings-path-item">
+            <span>/Users/username/TV Shows</span>
+            <button className="settings-path-remove">Remove</button>
+          </div>
+        </div>
+        <Button variant="secondary" size="sm">
+          Add Folder
+        </Button>
+      </div>
+
+      <div className="settings-group">
+        <label className="settings-label">Metadata</label>
+        <Button
+          variant="secondary"
+          onClick={handleRefreshMetadata}
+          disabled={extracting}
+          loading={extracting}
+        >
+          {extracting ? 'Refreshing...' : 'Refresh Metadata'}
+        </Button>
+        <p className="settings-help">Force re-extraction of metadata (thumbnails, duration, tracks) for all files.</p>
+      </div>
+
+      <div className="settings-group">
+        <label className="settings-label">Auto-scan interval</label>
+        <select className="settings-select">
+          <option value="300">5 minutes</option>
+          <option value="900">15 minutes</option>
+          <option value="3600">1 hour</option>
+          <option value="0">Disabled</option>
+        </select>
+      </div>
+
+      <div className="settings-group">
+        <label className="settings-label">
+          <input type="checkbox" defaultChecked />
+          <span>Watch for file changes</span>
+        </label>
+        <p className="settings-help">Automatically update library when files are added or removed</p>
+      </div>
+    </div>
+  );
+};
 
 const PlaybackSettings: React.FC = () => (
   <div className="settings-section">
     <h3 className="settings-section__title">Playback Settings</h3>
     
+    <div className="settings-group">
+      <label className="settings-label">Player Engine</label>
+      <select className="settings-select">
+        <option value="html5">HTML5 (Default)</option>
+        <option value="vlc">LibVLC (Advanced)</option>
+      </select>
+      <p className="settings-help">LibVLC supports more formats (MKV, AVI) but requires VLC installation.</p>
+    </div>
+
     <div className="settings-group">
       <label className="settings-label">Default playback speed</label>
       <select className="settings-select">

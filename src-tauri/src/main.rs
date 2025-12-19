@@ -18,11 +18,6 @@ struct AppState {
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! Welcome to CineVault.", name)
-}
-
-#[tauri::command]
 fn get_db_stats(state: State<AppState>) -> Result<String, String> {
     let db = state.db.lock().unwrap();
     let conn = db.connection();
@@ -867,7 +862,6 @@ fn main() {
             vlc_player: Mutex::new(None),
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
             get_db_stats,
             scan_directory,
             get_all_media,

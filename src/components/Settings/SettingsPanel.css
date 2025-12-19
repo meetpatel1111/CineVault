@@ -145,6 +145,41 @@
   background-color: rgba(244, 67, 54, 0.1);
 }
 
+/* New styles for System Status */
+.settings-status-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.settings-status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3);
+  background-color: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+}
+
+.settings-status-label {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.settings-status-value {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.settings-status-value.success {
+  color: var(--color-success);
+}
+
+.settings-status-value.error {
+  color: var(--color-error);
+}
+
 @media (max-width: 768px) {
   .settings-panel {
     flex-direction: column;
