@@ -207,3 +207,59 @@ pub struct WatchStats {
     pub total_watch_time: u64,
     pub total_sessions: usize,
 }
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct DailyWatchStat {
+    pub date: String,
+    pub minutes: i64,
+    pub sessions: i64,
+}
+
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct MediaTypeStat {
+    pub media_type: String,
+    pub count: i64,
+}
+
+/// Get watch history grouped by date for the last N days
+pub fn get_watch_history_chart(conn: &Connection, days: i32) -> Result<Vec<DailyWatchStat>> {
+    let mut stmt = conn.prepare(
+        "SELECT
+            strftime('%Y-%m-%d', started_at) as day,
+            SUM(duration_watched) / 60 as minutes,
+            COUNT(*) as sessions
+         FROM playback_history
+         WHERE started_at >= date('now', '-' || ?1 || ' days')
+         GROUP BY day
+         ORDER BY day ASC"
+    )?;
+
+    let items = stmt.query_map([days], |row| {
+        Ok(DailyWatchStat {
+            date: row.get(0)?,
+            minutes: row.get::<_, Option<i64>>(1)?.unwrap_or(0),
+            sessions: row.get(2)?,
+        })
+    })?;
+
+    items.collect()
+}
+
+/// Get distribution of media types in library
+pub fn get_media_type_distribution(conn: &Connection) -> Result<Vec<MediaTypeStat>> {
+    let mut stmt = conn.prepare(
+        "SELECT media_type, COUNT(*) as count
+         FROM media_files
+         WHERE is_deleted = 0
+         GROUP BY media_type"
+    )?;
+
+    let items = stmt.query_map([], |row| {
+        Ok(MediaTypeStat {
+            media_type: row.get(0)?,
+            count: row.get(1)?,
+        })
+    })?;
+
+    items.collect()
+}

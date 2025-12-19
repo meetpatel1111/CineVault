@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
   { id: 'music', label: 'Music', icon: '🎵' },
   { id: 'playlists', label: 'Playlists', icon: '📋' },
   { id: 'collections', label: 'Collections', icon: '📚' },
+  { id: 'analytics', label: 'Analytics', icon: '📊' },
 ];
 
 const libraryItems: NavItem[] = [

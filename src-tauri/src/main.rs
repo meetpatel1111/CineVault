@@ -266,6 +266,29 @@ fn get_watch_stats(state: State<AppState>) -> Result<db::WatchStats, String> {
 }
 
 #[tauri::command]
+fn get_watch_history_chart(
+    days: i32,
+    state: State<AppState>,
+) -> Result<Vec<db::DailyWatchStat>, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::get_watch_history_chart(&conn, days).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_media_type_distribution(
+    state: State<AppState>,
+) -> Result<Vec<db::MediaTypeStat>, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::get_media_type_distribution(&conn).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn extract_metadata(
     media_id: i64,
     state: State<'_, AppState>,
@@ -919,6 +942,8 @@ fn main() {
             get_recently_played,
             get_in_progress,
             get_watch_stats,
+            get_watch_history_chart,
+            get_media_type_distribution,
             extract_metadata,
             extract_all_metadata,
             add_subtitle_track,

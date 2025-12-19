@@ -21,6 +21,7 @@ import {
   SubtitleManagerModal,
   type DropdownItem
 } from "./components";
+import { AnalyticsDashboard } from "./components/Analytics/AnalyticsDashboard";
 import { mediaService, type ScanProgress } from "./services/mediaService";
 import { playbackService } from "./services/playbackService";
 import { playlistService, type Playlist } from "./services/playlistService";
@@ -144,7 +145,7 @@ function App() {
 
   const handleFilterChange = (filter: 'all' | 'movie' | 'tv' | 'music') => {
     // If we're not on home/movies/tv/music section, switch to it
-    if (currentSection === 'playlists' || currentSection === 'collections') {
+    if (['playlists', 'collections', 'analytics'].includes(currentSection)) {
       const filterToSection: Record<'all' | 'movie' | 'tv' | 'music', string> = {
         'all': 'home',
         'movie': 'movies',
@@ -350,6 +351,10 @@ function App() {
         );
       }
       return <CollectionList onSelectCollection={setSelectedCollection} />;
+    }
+
+    if (currentSection === 'analytics') {
+      return <AnalyticsDashboard />;
     }
 
     // Default content (Home/Media)
