@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { PlayerControls } from './PlayerControls';
 import { subtitleService, SubtitleTrack } from '../../services/subtitleService';
-import { audioTrackService, AudioTrack } from '../../services/audioTrackService';
+import { audioTrackService } from '../../services/audioTrackService';
 import { convertFileSrc } from '@tauri-apps/api/tauri';
 import './VideoPlayer.css';
 
@@ -35,7 +35,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [showControls, setShowControls] = useState(true);
   const [buffered, setBuffered] = useState(0);
   const [subtitles, setSubtitles] = useState<SubtitleTrack[]>([]);
-  const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
   const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
   const controlsTimeoutRef = useRef<number>();
 
@@ -52,7 +51,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       setSubtitles(subTracks);
 
       const audTracks = await audioTrackService.getAudioTracks(mediaId);
-      setAudioTracks(audTracks);
+      // Just log for now until UI is ready
       console.log('Audio tracks available:', audTracks);
     } catch (err) {
       console.error('Failed to load media info:', err);
