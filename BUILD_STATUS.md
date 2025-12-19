@@ -15,10 +15,14 @@
 ### Backend (Rust + Tauri) - COMPLETE ✅
 ```
 ✓ Rust compilation successful (v1.90.0)
-✓ All dependencies resolved (including optional vlc-rs)
+✓ All dependencies resolved
 ✓ Features enabled: custom-protocol
 ✓ Optional features: vlc (available via feature flag)
 ```
+
+### New Dependencies Added
+- **Frontend**: `recharts` (for Analytics Dashboard)
+- **Backend**: `vlc-rs` (for optional LibVLC support)
 
 ---
 
@@ -62,6 +66,8 @@ For LibVLC support, enable the feature: `npm run tauri build --features vlc`.
 6. ✅ **UI Components** - Complete design system
 7. ✅ **Smart Playlists** - Logic implemented
 8. ✅ **Metadata Extraction** - FFmpeg CLI integration
+9. ✅ **Backup & Restore** - Hot backup via VACUUM INTO
+10. ✅ **Analytics** - Offline Dashboard implemented
 
 ---
 
@@ -72,6 +78,7 @@ For LibVLC support, enable the feature: `npm run tauri build --features vlc`.
 - **TypeScript**: 5.3.3
 - **Vite**: 5.0.11
 - **Tauri API**: 1.5.3
+- **Recharts**: 2.x (Analytics)
 
 ### Backend Stack
 - **Rust**: 1.90.0
@@ -123,6 +130,7 @@ For LibVLC support, enable the feature: `npm run tauri build --features vlc`.
    - Scan a media folder
    - Create a Smart Playlist
    - Manage Subtitles
+   - View Analytics Dashboard
 
 3. **Verify database:**
    - Check `%APPDATA%/com.cinevault.app/cinevault.db`
@@ -155,4 +163,4 @@ For LibVLC support, enable the feature: `npm run tauri build --features vlc`.
 
 The application is fully implemented and ready for local development.
 - Frontend: **Ready**
-- Backend: **Ready** (Smart Playlists & VLC support added)
+- Backend: **Ready** (Smart Playlists, Backup, Analytics & VLC support added)

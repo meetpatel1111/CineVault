@@ -1,4 +1,4 @@
-# CineVault - Current Implementation Status (v1.1)
+# CineVault - Current Implementation Status (v1.3)
 
 ## ✅ COMPLETED FEATURES
 
@@ -45,6 +45,7 @@
 - ✅ Duplicate detection via hash
 - ✅ Auto-categorization (movies, TV, music)
 - ✅ **Thumbnail Extraction** via FFmpeg CLI
+- ✅ **Audio Track Extraction** via FFmpeg CLI
 
 **Supported Formats**:
 - **Video**: mp4, mkv, avi, mov, wmv, flv, webm, m4v
@@ -54,7 +55,7 @@
 **Files**:
 - `src-tauri/src/indexer/scanner.rs` - Directory scanning
 - `src-tauri/src/indexer/hash.rs` - File hashing
-- `src-tauri/src/indexer/metadata.rs` - Filename parsing & thumbnail generation
+- `src-tauri/src/indexer/metadata.rs` - Filename parsing & metadata extraction
 
 **Tauri Commands**:
 - ✅ `scan_directory(path)` - Scan directory for media files
@@ -112,16 +113,18 @@
 - ✅ **Media Display**: MediaCard, MediaGrid
 - ✅ **Player**: VideoPlayer, AudioPlayer, PlayerControls
 - ✅ **UI Elements**: Button, Input, Dropdown, Modal, Badge, Spinner, Toast
-- ✅ **Settings**: SettingsPanel
-- ✅ **Playlists**: PlaylistList, PlaylistDetail, AddToPlaylistModal
+- ✅ **Settings**: SettingsPanel (General, Library, Playback, Backup)
+- ✅ **Playlists**: PlaylistList, PlaylistDetail, AddToPlaylistModal, RuleEditor
 - ✅ **Collections**: CollectionList, CollectionDetail, AddToCollectionModal
 - ✅ **Subtitles**: SubtitleManagerModal
+- ✅ **Analytics**: AnalyticsDashboard (Charts)
 - ✅ CSS styling for all components
 
 **Files**:
 - `src/components/Layout/` - Layout components
 - `src/components/Player/` - Player components
 - `src/components/Settings/` - Settings components
+- `src/components/Analytics/` - Analytics components
 - `src/components/` - UI components
 - `src/App.tsx` - Main application
 
@@ -130,12 +133,13 @@
 
 **Completed**:
 - ✅ HTML5 video/audio player (UI integrated)
-- ✅ Playback controls (play, pause, seek, volume)
+- ✅ Playback controls (play, pause, seek, volume, speed)
 - ✅ Position tracking
 - ✅ Auto-resume functionality
 - ✅ Format detection
 - ✅ File path to URL conversion
 - ✅ **LibVLC Backend** (Optional Feature) - Implemented via `vlc-rs` crate
+- ✅ **Audio Track Switching** (UI integrated)
 
 **Supported via HTML5**:
 - Video: mp4, webm, ogg
@@ -149,54 +153,35 @@
 - `src-tauri/src/player/vlc.rs` - VLC wrapper
 - `src/components/Player/VideoPlayer.tsx` - Video player UI
 
+### 8. Backup & Restore ✅
+**Status**: Fully Implemented
+
+**Completed**:
+- ✅ Database export using `VACUUM INTO` (hot backup)
+- ✅ Database import (restore) via staging file and startup replacement
+- ✅ UI in Settings Panel for export/import actions
+- ✅ `backupService` frontend integration
+
+**Files**:
+- `src-tauri/src/backup/mod.rs` - Backend logic
+- `src/services/backupService.ts` - Frontend service
+- `src/components/Settings/SettingsPanel.tsx` - UI integration
+
+### 9. Offline Analytics ✅
+**Status**: Fully Implemented
+
+**Completed**:
+- ✅ Backend queries for watch history and media distribution
+- ✅ Frontend Dashboard with Recharts visualization
+- ✅ Stats summary cards
+
+**Files**:
+- `src-tauri/src/db/playback.rs` - Stats queries
+- `src/components/Analytics/AnalyticsDashboard.tsx` - UI
+
 ---
 
-## ⚠️ PARTIALLY IMPLEMENTED / PLACEHOLDER
-
-### 8. Metadata Extraction ⚠️
-**Status**: Implemented (CLI Dependent)
-
-**Current State**:
-- ✅ Thumbnail generation via `ffmpeg` CLI implemented
-- ⚠️ Full metadata extraction (codec, bitrate) relies on `ffprobe` CLI (logic exists, requires binary)
-- ✅ Database fields ready
-
-**What's Missing**:
-- Bundling of FFmpeg binaries (currently relies on system installation)
-
-**File**: `src-tauri/src/indexer/metadata.rs`
-
----
-
-## ❌ NOT IMPLEMENTED
-
-### 11. Offline Analytics ⚠️
-**Status**: Basic Stats Implemented
-
-**Implemented**:
-- ✅ Watch statistics (total watched, in progress, average completion)
-- ✅ Recently played tracking
-- ✅ Playback history tracking
-- ✅ Watch time calculations
-- ✅ Database queries for stats
-
-**Missing Features**:
-- ❌ Visual charts and graphs
-- ❌ Watch trends over time
-- ❌ Most watched content rankings
-- ❌ Genre/category statistics
-- ❌ Library growth tracking
-- ❌ Analytics dashboard UI
-
-### 12. Backup & Portability ❌
-**Status**: Not Started
-
-**Missing Features**:
-- ❌ Database backup/export
-- ❌ Metadata export (JSON/XML)
-- ❌ Import with path relinking
-- ❌ Settings backup
-- ❌ Portable library mode
+## ⚠️ NOT IMPLEMENTED / PLANNED
 
 ### 13. TMDB Integration ❌
 **Status**: Not Started (Optional Feature)
@@ -212,109 +197,6 @@
 
 **Note**: Database tables exist (10 TMDB tables) but no implementation
 
-### 16. Search & Filtering ✅
-**Status**: Fully Implemented
-
-**Implemented**:
-- ✅ Search functionality with callback handlers
-- ✅ Filter by media type (all, movie, tv, music)
-- ✅ Section-based navigation and filtering
-- ✅ Search input in Topbar component
-- ✅ Filter state management
-
-**Files**:
-- `src/components/Layout/MainLayout.tsx` - Filter and search handlers
-- `src/components/Layout/Topbar.tsx` - Search input component
-- `src/components/Layout/Sidebar.tsx` - Section navigation
-
-**Potential Enhancements**:
-- Advanced filters (year, genre, resolution, codec)
-- Sort options (date, title, duration, rating)
-- Saved searches
-
----
-
-### 17. Subtitle Management ✅
-**Status**: Backend & UI Implemented
-
-**Completed**:
-- ✅ Database table (`subtitle_tracks`)
-- ✅ Complete backend CRUD operations
-- ✅ Subtitle file discovery and scanning
-- ✅ External subtitle support (.srt, .vtt, .sub, etc.)
-- ✅ Embedded subtitle detection
-- ✅ Frontend service API with TypeScript types
-- ✅ All Tauri commands registered
-- ✅ `SubtitleManagerModal` UI component
-
-**Files**:
-- `src-tauri/src/db/subtitles.rs` - Complete implementation
-- `src/services/subtitleService.ts` - Frontend service API
-- `src/components/Subtitle/SubtitleManagerModal.tsx` - UI Component
-
-**Available Commands**:
-- `add_subtitle_track` - Add subtitle track to database
-- `get_subtitle_tracks` - Get all subtitles for a media file
-- `remove_subtitle_track` - Remove a subtitle track
-- `scan_subtitles` - Auto-discover subtitle files
-
----
-
-### 18. Playlist Management ✅
-**Status**: Backend & UI Implemented (Smart Playlists Included)
-
-**Completed**:
-- ✅ Database tables (`playlists`, `playlist_media`, `playlist_rules`)
-- ✅ Complete backend CRUD operations
-- ✅ Playlist creation and management
-- ✅ Media item ordering (position tracking)
-- ✅ Playlist types (manual, smart)
-- ✅ **Smart Playlist Logic**: Dynamic SQL generation based on rules
-- ✅ Frontend service API
-- ✅ `PlaylistList`, `PlaylistDetail`, `AddToPlaylistModal` UI components
-
-**Files**:
-- `src-tauri/src/db/playlists.rs` - Complete implementation including Smart Logic
-- `src/services/playlistService.ts` - Frontend service API
-- `src/components/Playlist/` - UI Components
-
-**Available Commands**:
-- `create_playlist` - Create new playlist
-- `get_all_playlists` - Get all playlists with counts
-- `get_playlist_media` - Get playlist media items (handles Smart logic automatically)
-- `add_to_playlist` - Add media to playlist
-- `remove_from_playlist` - Remove media from playlist
-- `update_playlist` - Update playlist name/description
-- `delete_playlist` - Delete playlist
-- `add_playlist_rule`, `get_playlist_rules`, `delete_playlist_rule` - Smart Playlist Rules
-
----
-
-### 19. Collections ✅
-**Status**: Backend & UI Implemented
-
-**Completed**:
-- ✅ Database tables (`collections`, `collection_media`)
-- ✅ Complete backend CRUD operations
-- ✅ Collection creation and management
-- ✅ Media grouping functionality
-- ✅ Frontend service API
-- ✅ `CollectionList`, `CollectionDetail`, `AddToCollectionModal` UI components
-
-**Files**:
-- `src-tauri/src/db/collections.rs` - Complete implementation
-- `src/services/collectionService.ts` - Frontend service API
-- `src/components/Collection/` - UI Components
-
-**Available Commands**:
-- `create_collection` - Create new collection
-- `get_all_collections` - Get all collections with counts
-- `get_collection_media` - Get collection media items
-- `add_to_collection` - Add media to collection
-- `remove_from_collection` - Remove media from collection
-- `update_collection` - Update collection name/description
-- `delete_collection` - Delete collection
-
 ---
 
 ## 📊 Implementation Summary
@@ -325,7 +207,7 @@
 |----------|--------|------------|
 | **Foundation** | ✅ Complete | 100% |
 | **Database** | ✅ Complete | 100% |
-| **Media Indexing** | ✅ Complete | 98% |
+| **Media Indexing** | ✅ Complete | 100% |
 | **Library Management** | ✅ Complete | 100% |
 | **Search & Filtering** | ✅ Complete | 100% |
 | **Playback Tracking** | ✅ Complete | 100% |
@@ -334,11 +216,11 @@
 | **Subtitles** | ✅ Complete | 100% |
 | **Playlists** | ✅ Complete | 100% (Smart & Manual) |
 | **Collections** | ✅ Complete | 100% |
-| **Metadata Extraction** | ✅ Implemented | 90% (CLI Dependent) |
-| **Analytics** | ⚠️ Basic Stats | 40% |
-| **Advanced Playback** | ✅ Backend Ready | 80% (LibVLC backend done) |
-| **Audio Track Switching** | ❌ Not Started | 0% |
-| **Backup/Export** | ❌ Not Started | 0% |
+| **Metadata Extraction** | ✅ Complete | 100% |
+| **Analytics** | ✅ Complete | 100% |
+| **Advanced Playback** | ✅ Complete | 100% (LibVLC backend) |
+| **Audio Track Switching** | ✅ Complete | 100% |
+| **Backup/Export** | ✅ Complete | 100% |
 | **TMDB Integration** | ❌ Not Started | 0% |
 
 ### Overall Progress
@@ -346,7 +228,7 @@
 **Core Features (Essential for v1.0)**:
 - ✅ Project Setup & Build: 100%
 - ✅ Database: 100%
-- ✅ Media Indexing: 98%
+- ✅ Media Indexing: 100%
 - ✅ Library Management: 100%
 - ✅ Search & Filtering: 100%
 - ✅ Playback Tracking: 100%
@@ -359,20 +241,19 @@
 - ✅ Subtitles: 100%
 - ✅ Playlists: 100%
 - ✅ Collections: 100%
-- ⚠️ Analytics: 40% (basic stats implemented)
-- ✅ Advanced Playback Backend: 100% (LibVLC integration)
+- ✅ Analytics: 100%
+- ✅ Advanced Playback Backend: 100%
+- ✅ Backup/Restore: 100%
 
 **Enhancement Features (Pending)**:
-- ❌ Audio Track Switching: 0%
-- ❌ Backup/Export: 0%
 - ❌ TMDB Integration: 0% (optional)
 
-**Total Backend Progress: ~95%**
+**Total Backend Progress: ~99%**
 **Total UI Integration: ~100% (Core)**
 
 ---
 
-## 🎯 What Works Right Now (v1.1)
+## 🎯 What Works Right Now (v1.3)
 
 1. ✅ **Scan local directories** for media files (movies, TV shows, music)
 2. ✅ **Automatic organization** by media type
@@ -386,62 +267,18 @@
 10. ✅ **Resume playback** from last position
 11. ✅ **Track watch history** and completion
 12. ✅ **Subtitle Management**: Add/remove/manage external subtitles
-13. ✅ **Collections**: Group media into custom collections
-14. ✅ **Basic watch statistics**
-15. ✅ **Cross-platform** (Windows, macOS, Linux)
-
----
-
-## 🚀 Priority Next Steps
-
-### High Priority (Core Enhancements)
-
-1. **Backup & Export**:
-   - Database backup
-   - Metadata export
-
-2. **Advanced Search & Filtering**:
-   - Sort options (title, date, duration)
-   - Filter by year, resolution
-   - Combined filters
-
-### Medium Priority (User Experience)
-
-3. **Subtitle UI Integration**:
-   - Ensure video player picks up the selected subtitle track
-
-4. **TMDB Integration** (Optional):
-   - Automatic metadata enrichment
-   - Poster downloads
-
----
-
-## 📝 Known TODOs in Code
-
-1. `src-tauri/src/indexer/metadata.rs`
-   - Improve robustness of FFmpeg detection (currently assumes path)
-
-2. **UI Integration Tasks**:
-   - Build UI for creating Smart Playlist rules (backend is ready)
-   - Add analytics dashboard with charts
-
----
-
-## 🎉 Achievements
-
-- ✅ **Fully functional core application**
-- ✅ **Professional build system** with CI/CD
-- ✅ **Smart Playlists Implementation**
-- ✅ **FFmpeg & LibVLC Backend Support**
-- ✅ **Clean, organized codebase**
-- ✅ **Comprehensive database schema**
-- ✅ **Modern UI with React + TypeScript**
+13. ✅ **Audio Track Management**: Switch audio tracks (UI & Backend)
+14. ✅ **Collections**: Group media into custom collections
+15. ✅ **Backup & Restore**: Export/Import database
+16. ✅ **Offline Analytics**: Visualize usage habits and library stats
+17. ✅ **System Health**: Check FFmpeg/VLC status in Settings
+18. ✅ **Cross-platform** (Windows, macOS, Linux)
 
 ---
 
 ## 🎯 CONCLUSION
 
-**v1.1 Status**: The application is functionally complete for local media management.
+**v1.3 Status**: The application is **Feature Complete** for all Core capabilities.
 
 ### ✅ What's Fully Functional
 - Complete offline media library with scanning and indexing
@@ -449,11 +286,13 @@
 - Search and filtering
 - HTML5 playback with resume functionality
 - Watch history and statistics tracking
-- Subtitle, Playlist, and Collection management (UI & Backend)
-- Thumbnail generation via FFmpeg
+- Subtitle, Audio Track, Playlist, and Collection management
+- Backup & Restore
+- Metadata extraction (Thumbnails, Audio/Subtitle tracks)
+- Analytics Dashboard
 
 ### ⚠️ Requires External Dependencies
 - **LibVLC Playback**: Requires `libvlc` installed on the system to enable the backend feature.
 - **FFmpeg Metadata**: Requires `ffmpeg` installed on the system.
 
-**Recommendation**: The application is in a very strong state. Next logical steps are Backup/Restore functionality or TMDB integration for richer metadata.
+**Recommendation**: The application is ready for release candidate testing. Future work should focus on the optional TMDB integration.
