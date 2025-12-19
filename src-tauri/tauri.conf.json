@@ -58,7 +58,14 @@
       ],
       "resources": [
         "vlc/**"
-      ]
+      ],
+      "deb": {
+        "depends": [
+          "vlc",
+          "libvlc5",
+          "ffmpeg"
+        ]
+      }
     },
     "security": {
       "csp": null
