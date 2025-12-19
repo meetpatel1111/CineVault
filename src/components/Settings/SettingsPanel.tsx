@@ -3,6 +3,7 @@ import { Modal } from '../Modal';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { systemService, DependencyStatus } from '../../services/systemService';
+import { backupService } from '../../services/backupService';
 import { useToast } from '../Toast';
 import './SettingsPanel.css';
 
@@ -12,7 +13,7 @@ interface SettingsPanelProps {
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'library' | 'playback' | 'tmdb'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'library' | 'playback' | 'backup' | 'tmdb'>('general');
 
   return (
     <Modal
@@ -53,6 +54,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
             Playback
           </button>
           <button
+            className={`settings-panel__tab ${activeTab === 'backup' ? 'settings-panel__tab--active' : ''}`}
+            onClick={() => setActiveTab('backup')}
+          >
+            <span className="settings-panel__tab-icon">💾</span>
+            Backup
+          </button>
+          <button
             className={`settings-panel__tab ${activeTab === 'tmdb' ? 'settings-panel__tab--active' : ''}`}
             onClick={() => setActiveTab('tmdb')}
           >
@@ -65,6 +73,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose })
           {activeTab === 'general' && <GeneralSettings />}
           {activeTab === 'library' && <LibrarySettings />}
           {activeTab === 'playback' && <PlaybackSettings />}
+          {activeTab === 'backup' && <BackupSettings />}
           {activeTab === 'tmdb' && <TMDBSettings />}
         </div>
       </div>
@@ -262,6 +271,77 @@ const PlaybackSettings: React.FC = () => (
     </div>
   </div>
 );
+
+const BackupSettings: React.FC = () => {
+  const { success, error } = useToast();
+  const [loading, setLoading] = useState(false);
+
+  const handleExport = async () => {
+    setLoading(true);
+    try {
+      await backupService.exportDatabase();
+      success('Database exported successfully');
+    } catch (err) {
+      // User might cancel dialog, which throws
+      if (typeof err === 'string' && err.includes('cancelled')) return;
+      console.error(err);
+      error('Export failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImport = async () => {
+    if (!confirm('Restoring a backup will overwrite your current library. This application will restart. Continue?')) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await backupService.importDatabase();
+      if (result) {
+        success('Backup staged. Please restart the application to apply changes.');
+        // Optionally trigger restart if Tauri supports it directly, or just alert
+        alert('Backup restored. Please restart the application.');
+      }
+    } catch (err) {
+      console.error(err);
+      error('Import failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="settings-section">
+      <h3 className="settings-section__title">Backup & Restore</h3>
+
+      <div className="settings-group">
+        <label className="settings-label">Export Library</label>
+        <Button
+          variant="secondary"
+          onClick={handleExport}
+          disabled={loading}
+        >
+          Export Database
+        </Button>
+        <p className="settings-help">Save a copy of your library database (watch history, playlists, etc.) to a file.</p>
+      </div>
+
+      <div className="settings-group">
+        <label className="settings-label">Restore Library</label>
+        <Button
+          variant="danger"
+          onClick={handleImport}
+          disabled={loading}
+        >
+          Restore Database
+        </Button>
+        <p className="settings-help">Restore your library from a backup file. Requires restart.</p>
+      </div>
+    </div>
+  );
+};
 
 const TMDBSettings: React.FC = () => (
   <div className="settings-section">
