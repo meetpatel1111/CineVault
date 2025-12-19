@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { playlistService, Playlist, PlaylistMediaItem } from '../../services/playlistService';
+import { playlistService, Playlist, PlaylistMediaItem, PlaylistRule } from '../../services/playlistService';
 import { Button } from '../Button';
 import { Spinner } from '../Spinner';
 import { MediaGrid } from '../MediaGrid';
 import { useToast } from '../Toast';
 import { Dropdown } from '../Dropdown';
+import { RuleEditor } from './RuleEditor';
+import { Badge } from '../Badge';
 
 interface PlaylistDetailProps {
   playlist: Playlist;
@@ -20,6 +22,7 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
   onDeletePlaylist
 }) => {
   const [items, setItems] = useState<PlaylistMediaItem[]>([]);
+  const [rules, setRules] = useState<PlaylistRule[]>([]);
   const [loading, setLoading] = useState(true);
   const { error, success } = useToast();
 
@@ -28,6 +31,11 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
     try {
       const data = await playlistService.getPlaylistMedia(playlist.id);
       setItems(data);
+
+      if (playlist.playlist_type === 'smart') {
+        const rulesData = await playlistService.getRules(playlist.id);
+        setRules(rulesData);
+      }
     } catch (err) {
       console.error(err);
       error('Failed to load playlist items');
@@ -41,6 +49,10 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
   }, [playlist.id]);
 
   const handleRemoveItem = async (mediaId: number) => {
+    if (playlist.playlist_type === 'smart') {
+      error("Cannot remove items from a Smart Playlist directly. Edit the rules instead.");
+      return;
+    }
     try {
       await playlistService.removeFromPlaylist(playlist.id, mediaId);
       success('Item removed from playlist');
@@ -53,7 +65,8 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
 
   const mediaActions = [
     { id: 'play', label: 'Play', icon: '▶️' },
-    { id: 'remove', label: 'Remove from Playlist', icon: '🗑️', danger: true }
+    // Only show remove if manual
+    ...(playlist.playlist_type === 'manual' ? [{ id: 'remove', label: 'Remove from Playlist', icon: '🗑️', danger: true }] : [])
   ];
 
   const handleMediaAction = (action: any, item: any) => {
@@ -102,7 +115,10 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
             Back
           </Button>
           <div>
-            <h2 style={{ margin: 0 }}>{playlist.name}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <h2 style={{ margin: 0 }}>{playlist.name}</h2>
+              {playlist.playlist_type === 'smart' && <Badge variant="info">Smart</Badge>}
+            </div>
             {playlist.description && (
               <p style={{ margin: 0, color: 'var(--text-secondary)' }}>{playlist.description}</p>
             )}
@@ -120,6 +136,13 @@ export const PlaylistDetail: React.FC<PlaylistDetailProps> = ({
           align="right"
         />
       </div>
+
+      {playlist.playlist_type === 'smart' && rules.length > 0 && (
+        <div style={{ padding: '0 var(--space-4)', marginBottom: 'var(--space-4)' }}>
+          <h4 style={{ margin: '0 0 var(--space-2) 0', color: 'var(--text-secondary)' }}>Rules</h4>
+          <RuleEditor rules={rules} onChange={() => {}} readOnly />
+        </div>
+      )}
 
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 'var(--space-8)' }}>

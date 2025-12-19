@@ -15,6 +15,17 @@ pub struct MediaMetadata {
     pub framerate: Option<f64>,      // Frames per second
     pub audio_channels: Option<u32>, // Number of audio channels
     pub sample_rate: Option<u32>,    // Audio sample rate
+    pub audio_tracks: Vec<AudioTrackMetadata>, // Audio tracks
+}
+
+/// Audio track metadata
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct AudioTrackMetadata {
+    pub index: i32,
+    pub codec: String,
+    pub language: Option<String>,
+    pub channels: Option<u32>,
+    pub is_default: bool,
 }
 
 impl MediaMetadata {
@@ -120,11 +131,21 @@ impl MediaMetadata {
                     }
                 }
                 Some("audio") => {
+                    // Set primary audio info if missing
                     if metadata.audio_codec.is_none() {
-                        metadata.audio_codec = stream.codec_name;
+                        metadata.audio_codec = stream.codec_name.clone();
                         metadata.audio_channels = stream.channels;
-                        metadata.sample_rate = stream.sample_rate.and_then(|s| s.parse().ok());
+                        metadata.sample_rate = stream.sample_rate.as_ref().and_then(|s| s.parse().ok());
                     }
+
+                    // Collect audio track
+                    metadata.audio_tracks.push(AudioTrackMetadata {
+                        index: stream.index,
+                        codec: stream.codec_name.unwrap_or_default(),
+                        language: stream.tags.and_then(|t| t.language),
+                        channels: stream.channels,
+                        is_default: stream.disposition.and_then(|d| d.default).unwrap_or(0) == 1,
+                    });
                 }
                 _ => {}
             }
@@ -178,6 +199,39 @@ pub enum MetadataError {
     ExtractionFailed(String),
 }
 
+/// Generate a thumbnail for a video file using FFmpeg
+#[allow(dead_code)]
+pub fn generate_thumbnail<P: AsRef<Path>>(
+    video_path: P,
+    output_path: P,
+    time: f64,
+) -> Result<(), MetadataError> {
+    let video_path = video_path.as_ref();
+    let output_path = output_path.as_ref();
+
+    let output = Command::new("ffmpeg")
+        .args([
+            "-y", // Overwrite output
+            "-ss", &time.to_string(), // Seek to time
+            "-i", video_path.to_str().ok_or(MetadataError::ExtractionFailed("Invalid path".into()))?,
+            "-vframes", "1", // Extract 1 frame
+            "-vf", "scale=320:-1", // Resize to width 320, keep aspect ratio
+            output_path.to_str().ok_or(MetadataError::ExtractionFailed("Invalid output path".into()))?,
+        ])
+        .output()
+        .map_err(|e| MetadataError::ExtractionFailed(format!("Failed to run ffmpeg: {}", e)))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(MetadataError::ExtractionFailed(format!(
+            "ffmpeg failed: {}",
+            stderr
+        )));
+    }
+
+    Ok(())
+}
+
 /// FFProbe JSON output structure
 #[derive(Debug, Deserialize)]
 struct FFProbeOutput {
@@ -188,6 +242,7 @@ struct FFProbeOutput {
 /// FFProbe stream information
 #[derive(Debug, Deserialize)]
 struct FFProbeStream {
+    index: i32,
     codec_type: Option<String>,
     codec_name: Option<String>,
     width: Option<u32>,
@@ -195,6 +250,18 @@ struct FFProbeStream {
     avg_frame_rate: Option<String>,
     channels: Option<u32>,
     sample_rate: Option<String>,
+    tags: Option<FFProbeTags>,
+    disposition: Option<FFProbeDisposition>,
+}
+
+#[derive(Debug, Deserialize)]
+struct FFProbeTags {
+    language: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+struct FFProbeDisposition {
+    default: Option<i32>,
 }
 
 /// FFProbe format information

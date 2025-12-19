@@ -8,20 +8,23 @@ A privacy-first, offline-only media management and playback application.
 
 ## Features
 
-- 🎬 Local media discovery and indexing (Movies, TV Shows, Music)
-- ▶️ Advanced playback with hardware acceleration
-- 📝 Resume playback and watch history
-- 🎵 Subtitle and audio track management
-- 📊 Offline analytics and insights
-- 💾 Portable backups
-- 🎯 Optional TMDB integration for metadata enrichment
+- 🎬 **Local Media Discovery**: Recursively scans and indexes Movies, TV Shows, and Music.
+- ▶️ **Advanced Playback**:
+  - HTML5 Player for standard formats.
+  - Optional LibVLC integration for MKV/AVI support.
+  - Hardware acceleration.
+- 🧠 **Smart Playlists**: Dynamic playlists based on rules (Genre, Year, Duration, etc.).
+- 📝 **Watch Tracking**: Resume playback, watch history, and completion status.
+- 🎵 **Track Management**: Support for multiple subtitles and audio tracks.
+- 📊 **Offline Analytics**: Visual dashboard for watch habits and library stats.
+- 💾 **Backup & Restore**: Portable database export for data safety.
+- 🖼️ **Metadata Extraction**: Automatic thumbnail generation and file analysis.
 
 ## Tech Stack
 
-- **Frontend**: React + TypeScript
-- **Backend**: Rust + Tauri
-- **Database**: SQLite
-- **Playback**: FFmpeg / libVLC
+- **Frontend**: React + TypeScript + Recharts
+- **Backend**: Rust + Tauri + SQLite
+- **Playback**: FFmpeg / libVLC (Optional)
 
 ## Development
 
@@ -30,21 +33,13 @@ A privacy-first, offline-only media management and playback application.
 - Node.js (v18+)
 - Rust (latest stable)
 - npm or yarn
-- **Linux only:** GTK development libraries (see below)
+- **Linux only:** GTK development libraries
 
 ### Linux System Dependencies
 
-If you're developing on Linux, install these system packages:
-
 ```bash
-# Ubuntu/Debian (22.04+)
-sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
-
-# Fedora
-sudo dnf install gtk3-devel webkit2gtk3-devel libappindicator-gtk3-devel librsvg2-devel
-
-# Arch
-sudo pacman -S gtk3 webkit2gtk libappindicator-gtk3 librsvg
+# Ubuntu/Debian
+sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf ffmpeg libvlc-dev
 ```
 
 ### Setup
@@ -53,7 +48,7 @@ sudo pacman -S gtk3 webkit2gtk libappindicator-gtk3 librsvg
 # Install dependencies
 npm install
 
-# Generate application icons (first time only)
+# Generate icons
 npm run generate-icons
 
 # Run in development mode
@@ -65,24 +60,18 @@ npm run tauri build
 
 ### Icon Generation
 
-CineVault includes a custom-designed icon. To regenerate all icon formats:
-
+To regenerate icons from `src-tauri/icons/icon.svg`:
 ```bash
 npm run generate-icons
 ```
 
-For detailed instructions, see [ICON_GENERATION.md](./ICON_GENERATION.md).
+## Build Status
 
-You can also preview the icon by opening `tmp_rovodev_icon_preview.html` in your browser.
+- ✅ **Core Features**: Complete
+- ✅ **Extensions**: Analytics, Backup, Smart Playlists Implemented
+- ✅ **Status**: Release Candidate Ready
 
-### Build Status
-
-All compilation errors have been resolved:
-- ✅ Rust code compiles on all platforms
-- ✅ Professional icon system implemented
-- ✅ CI/CD workflows configured with proper dependencies
-
-See [ALL_FIXES_SUMMARY.md](./ALL_FIXES_SUMMARY.md) for complete details.
+See [CURRENT_IMPLEMENTATION_STATUS.md](./CURRENT_IMPLEMENTATION_STATUS.md) for details.
 
 ## Design Documents
 

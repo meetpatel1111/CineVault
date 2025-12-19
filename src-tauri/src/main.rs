@@ -4,6 +4,7 @@
 mod db;
 mod indexer;
 mod player;
+mod backup;
 
 use std::sync::Mutex;
 use tauri::State;
@@ -12,14 +13,11 @@ use chrono::Utc;
 // Application state
 struct AppState {
     db: Mutex<db::Database>,
+    #[cfg(feature = "vlc")]
+    vlc_player: Mutex<Option<player::vlc::VlcPlayer>>,
 }
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! Welcome to CineVault.", name)
-}
-
 #[tauri::command]
 fn get_db_stats(state: State<AppState>) -> Result<String, String> {
     let db = state.db.lock().unwrap();
@@ -268,6 +266,29 @@ fn get_watch_stats(state: State<AppState>) -> Result<db::WatchStats, String> {
 }
 
 #[tauri::command]
+fn get_watch_history_chart(
+    days: i32,
+    state: State<AppState>,
+) -> Result<Vec<db::DailyWatchStat>, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::get_watch_history_chart(&conn, days).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_media_type_distribution(
+    state: State<AppState>,
+) -> Result<Vec<db::MediaTypeStat>, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::get_media_type_distribution(&conn).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn extract_metadata(
     media_id: i64,
     state: State<'_, AppState>,
@@ -301,6 +322,12 @@ async fn extract_metadata(
     
     db::upsert_media_file(&conn, &updated_media)
         .map_err(|e| e.to_string())?;
+
+    // Save audio tracks
+    if !metadata.audio_tracks.is_empty() {
+        db::audio_tracks::save_audio_tracks(&conn, media_id, &updated_media.file_path, &metadata.audio_tracks)
+            .map_err(|e| e.to_string())?;
+    }
     
     Ok(MetadataResult {
         duration: metadata.duration,
@@ -378,6 +405,18 @@ fn scan_subtitles(
     
     db::scan_and_add_subtitles(&conn, media_id, &media_path)
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_audio_tracks(
+    media_id: i64,
+    state: State<AppState>,
+) -> Result<Vec<db::audio_tracks::AudioTrack>, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::audio_tracks::get_audio_tracks(&conn, media_id).map_err(|e| e.to_string())
 }
 
 // Collection commands
@@ -573,6 +612,172 @@ fn delete_playlist(
 }
 
 #[tauri::command]
+fn add_playlist_rule(
+    playlist_id: i64,
+    rule_type: String,
+    operator: String,
+    value: String,
+    state: State<AppState>,
+) -> Result<i64, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::add_playlist_rule(&conn, playlist_id, &rule_type, &operator, &value)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn get_playlist_rules(
+    playlist_id: i64,
+    state: State<AppState>,
+) -> Result<Vec<db::PlaylistRule>, String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::get_playlist_rules(&conn, playlist_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_playlist_rule(
+    rule_id: i64,
+    state: State<AppState>,
+) -> Result<(), String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    db::delete_playlist_rule(&conn, rule_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn check_dependencies() -> DependencyStatus {
+    let ffmpeg = std::process::Command::new("ffmpeg")
+        .arg("-version")
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    let vlc = cfg!(feature = "vlc");
+
+    DependencyStatus { ffmpeg, vlc }
+}
+
+#[tauri::command]
+async fn generate_thumbnail(
+    file_path: String,
+    time: f64,
+) -> Result<String, String> {
+    let path = std::path::Path::new(&file_path);
+    let temp_dir = std::env::temp_dir();
+    let file_stem = path.file_stem().unwrap_or_default().to_string_lossy();
+    let output_path = temp_dir.join(format!("{}_thumb.jpg", file_stem));
+
+    indexer::metadata::generate_thumbnail(path, &output_path, time)
+        .map_err(|e| e.to_string())?;
+
+    Ok(output_path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+#[allow(unused_variables)]
+fn init_vlc_player(state: State<AppState>) -> Result<bool, String> {
+    if cfg!(feature = "vlc") {
+        #[cfg(feature = "vlc")]
+        {
+            let mut player_lock = state.vlc_player.lock().map_err(|_| "Failed to lock state")?;
+            if player_lock.is_some() {
+                return Ok(true);
+            }
+
+            match player::vlc::VlcPlayer::new() {
+                Some(player) => {
+                    *player_lock = Some(player);
+                    Ok(true)
+                }
+                None => Err("Failed to initialize VLC instance. LibVLC might be missing.".into()),
+            }
+        }
+        #[cfg(not(feature = "vlc"))]
+        Ok(false)
+    } else {
+        Err("VLC feature is not enabled in build.".into())
+    }
+}
+
+#[tauri::command]
+#[allow(unused_variables)]
+fn play_in_vlc(
+    file_path: String,
+    state: State<AppState>,
+) -> Result<(), String> {
+    if cfg!(feature = "vlc") {
+        #[cfg(feature = "vlc")]
+        {
+            let player_lock = state.vlc_player.lock().map_err(|_| "Failed to lock state")?;
+            if let Some(player) = player_lock.as_ref() {
+                player.play_file(&file_path).map_err(|e| e.to_string())?;
+                Ok(())
+            } else {
+                Err("VLC player not initialized. Call init_vlc_player first.".into())
+            }
+        }
+        #[cfg(not(feature = "vlc"))]
+        Err("VLC feature not enabled".into())
+    } else {
+        Err("VLC feature not enabled".into())
+    }
+}
+
+#[tauri::command]
+#[allow(unused_variables)]
+fn set_audio_track(
+    track_index: i32,
+    state: State<AppState>,
+) -> Result<(), String> {
+    if cfg!(feature = "vlc") {
+        #[cfg(feature = "vlc")]
+        {
+            let player_lock = state.vlc_player.lock().map_err(|_| "Failed to lock state")?;
+            if let Some(player) = player_lock.as_ref() {
+                player.set_audio_track(track_index);
+                Ok(())
+            } else {
+                Err("VLC player not initialized.".into())
+            }
+        }
+        #[cfg(not(feature = "vlc"))]
+        Err("VLC feature not enabled".into())
+    } else {
+        Err("VLC feature not enabled".into())
+    }
+}
+
+#[tauri::command]
+fn export_database(
+    output_path: String,
+    state: State<AppState>,
+) -> Result<(), String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    backup::create_backup(&conn, &output_path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn import_database(
+    input_path: String,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
+    let app_data_dir = tauri::api::path::app_data_dir(&app_handle.config())
+        .ok_or("Failed to get app data directory")?;
+
+    backup::restore_backup(&input_path, &app_data_dir).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn extract_all_metadata(
     state: State<'_, AppState>,
     window: tauri::Window,
@@ -676,6 +881,12 @@ struct MetadataProgress {
     current_file: String,
 }
 
+#[derive(serde::Serialize)]
+struct DependencyStatus {
+    ffmpeg: bool,
+    vlc: bool,
+}
+
 fn main() {
     // Initialize database
     let app_data_dir = tauri::api::path::app_data_dir(&tauri::Config::default())
@@ -683,7 +894,29 @@ fn main() {
     
     std::fs::create_dir_all(&app_data_dir).expect("Failed to create app data directory");
     
+    // Check for restore file
+    let restore_path = app_data_dir.join("cinevault.db.restore");
     let db_path = app_data_dir.join("cinevault.db");
+
+    if restore_path.exists() {
+        println!("Restoring database from {:?}", restore_path);
+        // We try to rename. If db exists, we overwrite it.
+        // On Windows, if db is open, this might fail, but here we haven't opened it yet.
+        match std::fs::rename(&restore_path, &db_path) {
+            Ok(_) => println!("Database restored successfully"),
+            Err(e) => {
+                // Try copy and delete if rename fails (e.g. cross-filesystem)
+                match std::fs::copy(&restore_path, &db_path) {
+                    Ok(_) => {
+                        let _ = std::fs::remove_file(&restore_path);
+                        println!("Database restored successfully (copy)");
+                    },
+                    Err(e2) => eprintln!("Failed to restore database: {} / {}", e, e2),
+                }
+            }
+        }
+    }
+
     println!("Database path: {:?}", db_path);
     
     let database = db::Database::new(db_path).expect("Failed to initialize database");
@@ -694,9 +927,10 @@ fn main() {
     tauri::Builder::default()
         .manage(AppState {
             db: Mutex::new(database),
+            #[cfg(feature = "vlc")]
+            vlc_player: Mutex::new(None),
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
             get_db_stats,
             scan_directory,
             get_all_media,
@@ -708,12 +942,15 @@ fn main() {
             get_recently_played,
             get_in_progress,
             get_watch_stats,
+            get_watch_history_chart,
+            get_media_type_distribution,
             extract_metadata,
             extract_all_metadata,
             add_subtitle_track,
             get_subtitle_tracks,
             remove_subtitle_track,
             scan_subtitles,
+            get_audio_tracks,
             create_collection,
             get_all_collections,
             get_collection_media,
@@ -728,6 +965,16 @@ fn main() {
             remove_from_playlist,
             update_playlist,
             delete_playlist,
+            add_playlist_rule,
+            get_playlist_rules,
+            delete_playlist_rule,
+            check_dependencies,
+            generate_thumbnail,
+            init_vlc_player,
+            play_in_vlc,
+            set_audio_track,
+            export_database,
+            import_database,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

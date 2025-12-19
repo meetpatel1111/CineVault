@@ -4,6 +4,8 @@
 /// Future: Integrate FFmpeg or libVLC for advanced codec support.
 use std::path::Path;
 
+pub mod vlc;
+
 /// Player state
 #[allow(dead_code)]
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
