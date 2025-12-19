@@ -4,6 +4,7 @@
 mod db;
 mod indexer;
 mod player;
+mod backup;
 
 use std::sync::Mutex;
 use tauri::State;
@@ -731,6 +732,29 @@ fn set_audio_track(
 }
 
 #[tauri::command]
+fn export_database(
+    output_path: String,
+    state: State<AppState>,
+) -> Result<(), String> {
+    let db = state.db.lock().unwrap();
+    let conn = db.connection();
+    let conn = conn.lock().unwrap();
+
+    backup::create_backup(&conn, &output_path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn import_database(
+    input_path: String,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
+    let app_data_dir = tauri::api::path::app_data_dir(&app_handle.config())
+        .ok_or("Failed to get app data directory")?;
+
+    backup::restore_backup(&input_path, &app_data_dir).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 async fn extract_all_metadata(
     state: State<'_, AppState>,
     window: tauri::Window,
@@ -847,7 +871,29 @@ fn main() {
     
     std::fs::create_dir_all(&app_data_dir).expect("Failed to create app data directory");
     
+    // Check for restore file
+    let restore_path = app_data_dir.join("cinevault.db.restore");
     let db_path = app_data_dir.join("cinevault.db");
+
+    if restore_path.exists() {
+        println!("Restoring database from {:?}", restore_path);
+        // We try to rename. If db exists, we overwrite it.
+        // On Windows, if db is open, this might fail, but here we haven't opened it yet.
+        match std::fs::rename(&restore_path, &db_path) {
+            Ok(_) => println!("Database restored successfully"),
+            Err(e) => {
+                // Try copy and delete if rename fails (e.g. cross-filesystem)
+                match std::fs::copy(&restore_path, &db_path) {
+                    Ok(_) => {
+                        let _ = std::fs::remove_file(&restore_path);
+                        println!("Database restored successfully (copy)");
+                    },
+                    Err(e2) => eprintln!("Failed to restore database: {} / {}", e, e2),
+                }
+            }
+        }
+    }
+
     println!("Database path: {:?}", db_path);
     
     let database = db::Database::new(db_path).expect("Failed to initialize database");
@@ -902,6 +948,8 @@ fn main() {
             init_vlc_player,
             play_in_vlc,
             set_audio_track,
+            export_database,
+            import_database,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
