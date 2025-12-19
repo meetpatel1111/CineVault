@@ -1,0 +1,72 @@
+.rule-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.rule-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background-color: var(--color-bg-secondary);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+}
+
+.rule-input-group {
+  display: flex;
+  flex: 1;
+  gap: var(--space-2);
+}
+
+.rule-select,
+.rule-input {
+  background-color: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.rule-select:focus,
+.rule-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.rule-select {
+  flex: 1;
+}
+
+.rule-input {
+  flex: 2;
+}
+
+.rule-display {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.rule-field {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.rule-operator {
+  color: var(--color-text-tertiary);
+}
+
+.rule-value {
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+.rule-editor-empty {
+  font-style: italic;
+  color: var(--color-text-tertiary);
+  font-size: var(--text-sm);
+}
