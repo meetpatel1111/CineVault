@@ -10,6 +10,7 @@
     "tauri": "tauri",
     "deps": "node scripts/download-deps.cjs",
     "prebuild": "npm run deps",
+    "predev": "npm run deps",
     "generate-icons": "node tmp_rovodev_generate_icons.js",
     "generate-icns": "node tmp_rovodev_generate_icns.js",
     "generate-all-icons": "npm run generate-icons && npm run generate-icns"

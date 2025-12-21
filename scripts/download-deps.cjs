@@ -71,13 +71,6 @@ function getTargetTriple() {
 }
 
 // FFmpeg URLs
-// Note: URLs might need to be dynamic based on arch for real production support of ARM windows/linux.
-// For now, we keep the original URLs but rename correctly based on current arch for Mac ARM support.
-// Assuming the mac zip (evermeet) is universal or we need specific ARM url?
-// Evermeet is x86_64. For Apple Silicon, we need different URL usually.
-// But for simplicity/time, we will use the existing URLs but fix the sidecar name
-// so Tauri doesn't complain about missing binary for current arch.
-// WARNING: Running x86 binary on ARM mac (Rosetta) usually works but the sidecar filename MUST match the host arch.
 const FFMPEG_URLS = {
   win32: 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip',
   linux: 'https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz',
@@ -95,143 +88,208 @@ async function main() {
   const targetTriple = getTargetTriple();
   console.log(`Target triple: ${targetTriple}`);
 
+  // Calculate expected FFmpeg binary paths
+  const ffmpegName = platform === 'win32' ? `ffmpeg-${targetTriple}.exe` : `ffmpeg-${targetTriple}`;
+  const ffprobeName = platform === 'win32' ? `ffprobe-${targetTriple}.exe` : `ffprobe-${targetTriple}`;
+
+  const ffmpegFinalPath = path.join(TAURI_BIN_DIR, ffmpegName);
+  const ffprobeFinalPath = path.join(TAURI_BIN_DIR, ffprobeName);
+
   // 1. Download FFmpeg
   if (FFMPEG_URLS[platform]) {
-    console.log('Downloading FFmpeg...');
-    const ffmpegUrl = FFMPEG_URLS[platform];
-    const ffmpegExt = platform === 'linux' ? '.tar.xz' : '.zip';
-    const ffmpegDest = path.join(TAURI_BIN_DIR, `ffmpeg${ffmpegExt}`);
+    // Check if files already exist
+    if (fs.existsSync(ffmpegFinalPath) && fs.existsSync(ffprobeFinalPath)) {
+         console.log('FFmpeg and FFprobe binaries already exist. Skipping download.');
+    } else {
+        console.log('Downloading FFmpeg...');
+        const ffmpegUrl = FFMPEG_URLS[platform];
+        const ffmpegExt = platform === 'linux' ? '.tar.xz' : '.zip';
+        const ffmpegDest = path.join(TAURI_BIN_DIR, `ffmpeg${ffmpegExt}`);
 
-    try {
-        await downloadFile(ffmpegUrl, ffmpegDest);
-        console.log('FFmpeg downloaded.');
+        try {
+            await downloadFile(ffmpegUrl, ffmpegDest);
+            console.log('FFmpeg downloaded.');
 
-        if (platform === 'linux') {
-            // Use tar for linux
-            await execAsync(`tar -xf ${ffmpegDest} -C ${TAURI_BIN_DIR}`);
+            if (platform === 'linux') {
+                // Use tar for linux
+                await execAsync(`tar -xf ${ffmpegDest} -C ${TAURI_BIN_DIR}`);
 
-            // Find the binary and move/rename it
-            const stdout = await execAsync(`find ${TAURI_BIN_DIR} -name "ffmpeg" -type f`);
-            const ffmpegPath = stdout.trim().split('\n')[0]; // take first match if multiple (unlikely)
-            if (!ffmpegPath) throw new Error('Could not find ffmpeg binary');
+                // Find the binary and move/rename it
+                const stdout = await execAsync(`find ${TAURI_BIN_DIR} -name "ffmpeg" -type f`);
+                const ffmpegPath = stdout.trim().split('\n')[0]; // take first match if multiple (unlikely)
+                if (!ffmpegPath) throw new Error('Could not find ffmpeg binary');
 
-            const targetName = `ffmpeg-${targetTriple}`;
-            fs.renameSync(ffmpegPath, path.join(TAURI_BIN_DIR, targetName));
-            fs.chmodSync(path.join(TAURI_BIN_DIR, targetName), 0o755);
-            console.log(`FFmpeg setup complete: ${targetName}`);
+                fs.renameSync(ffmpegPath, ffmpegFinalPath);
+                fs.chmodSync(ffmpegFinalPath, 0o755);
+                console.log(`FFmpeg setup complete: ${ffmpegName}`);
 
-            // Also ffprobe
-            try {
-                const stdout2 = await execAsync(`find ${TAURI_BIN_DIR} -name "ffprobe" -type f`);
-                const ffprobePath = stdout2.trim().split('\n')[0];
-                if(ffprobePath) {
-                    const targetName2 = `ffprobe-${targetTriple}`;
-                    fs.renameSync(ffprobePath, path.join(TAURI_BIN_DIR, targetName2));
-                    fs.chmodSync(path.join(TAURI_BIN_DIR, targetName2), 0o755);
+                // Also ffprobe
+                try {
+                    const stdout2 = await execAsync(`find ${TAURI_BIN_DIR} -name "ffprobe" -type f`);
+                    const ffprobePath = stdout2.trim().split('\n')[0];
+                    if(ffprobePath) {
+                        fs.renameSync(ffprobePath, ffprobeFinalPath);
+                        fs.chmodSync(ffprobeFinalPath, 0o755);
+                    }
+                } catch (err) {
+                    console.log('ffprobe not found or error looking for it, skipping.');
                 }
-            } catch (err) {
-                console.log('ffprobe not found or error looking for it, skipping.');
-            }
 
-        } else if (platform === 'win32') {
-            extractZip(ffmpegDest, TAURI_BIN_DIR);
+                // Cleanup Linux
+                console.log('Cleaning up FFmpeg temporary files...');
+                fs.unlinkSync(ffmpegDest); // delete tar.xz
+                // Delete the extracted directory (usually ffmpeg-version-static)
+                // We can infer it from the found path or just find directories in bin that are not .
+                // Safe way: we know the structure of johnvansickle build usually
+                if (ffmpegPath) {
+                    const extractedDir = path.dirname(ffmpegPath);
+                    if (extractedDir.includes(TAURI_BIN_DIR) && extractedDir !== TAURI_BIN_DIR) {
+                         // Careful not to delete bin dir itself
+                         // Assuming extractedDir is a direct subdir
+                         // We can just rimraf it if we are sure
+                         exec(`rm -rf "${extractedDir}"`, (err) => { if(err) console.error(err); });
+                    }
+                }
 
-             // Simple recursive find helper
-             function findFile(dir, name) {
-                 const files = fs.readdirSync(dir);
-                 for (const file of files) {
-                     const filePath = path.join(dir, file);
-                     const stat = fs.statSync(filePath);
-                     if (stat.isDirectory()) {
-                         const found = findFile(filePath, name);
-                         if (found) return found;
-                     } else if (file === name) {
-                         return filePath;
+            } else if (platform === 'win32') {
+                extractZip(ffmpegDest, TAURI_BIN_DIR);
+
+                // Simple recursive find helper
+                function findFile(dir, name) {
+                    const files = fs.readdirSync(dir);
+                    for (const file of files) {
+                        const filePath = path.join(dir, file);
+                        const stat = fs.statSync(filePath);
+                        if (stat.isDirectory()) {
+                            const found = findFile(filePath, name);
+                            if (found) return found;
+                        } else if (file === name) {
+                            return filePath;
+                        }
+                    }
+                    return null;
+                }
+
+                const ffmpegExe = findFile(TAURI_BIN_DIR, 'ffmpeg.exe');
+                const ffprobeExe = findFile(TAURI_BIN_DIR, 'ffprobe.exe');
+
+                if (ffmpegExe) {
+                    fs.renameSync(ffmpegExe, ffmpegFinalPath);
+                    console.log('Renamed ffmpeg.exe');
+                }
+                if (ffprobeExe) {
+                    fs.renameSync(ffprobeExe, ffprobeFinalPath);
+                    console.log('Renamed ffprobe.exe');
+                }
+
+                // Cleanup Windows
+                 console.log('Cleaning up FFmpeg temporary files...');
+                 fs.unlinkSync(ffmpegDest); // delete zip
+                 // Need to find and delete the extracted folder.
+                 // BtbN builds extract to a folder.
+                 if (ffmpegExe) {
+                     const extractedDir = path.dirname(ffmpegExe);
+                     if (extractedDir !== TAURI_BIN_DIR && extractedDir.startsWith(TAURI_BIN_DIR)) {
+                         // fs.rmdirSync(extractedDir, { recursive: true }); // requires Node 14.14+
+                         // Using exec for compat if needed, or rimraf logic
+                         try {
+                            fs.rmSync(extractedDir, { recursive: true, force: true });
+                         } catch(e) {
+                             console.error("Cleanup failed", e);
+                         }
                      }
                  }
-                 return null;
-             }
 
-             const ffmpegExe = findFile(TAURI_BIN_DIR, 'ffmpeg.exe');
-             const ffprobeExe = findFile(TAURI_BIN_DIR, 'ffprobe.exe');
+            } else if (platform === 'darwin') {
+                extractZip(ffmpegDest, TAURI_BIN_DIR);
+                // Usually just ffmpeg binary in zip (evermeet)
+                // It might unzip to 'ffmpeg' directly in bin if zip structure is flat?
+                // Evermeet zip usually contains just the binary.
+                const extractedFfmpeg = path.join(TAURI_BIN_DIR, 'ffmpeg');
+                if (fs.existsSync(extractedFfmpeg)) {
+                    fs.renameSync(extractedFfmpeg, ffmpegFinalPath);
+                    fs.chmodSync(ffmpegFinalPath, 0o755);
+                }
 
-             if (ffmpegExe) {
-                 fs.renameSync(ffmpegExe, path.join(TAURI_BIN_DIR, `ffmpeg-${targetTriple}.exe`));
-                 console.log('Renamed ffmpeg.exe');
-             }
-             if (ffprobeExe) {
-                 fs.renameSync(ffprobeExe, path.join(TAURI_BIN_DIR, `ffprobe-${targetTriple}.exe`));
-                 console.log('Renamed ffprobe.exe');
-             }
-
-        } else if (platform === 'darwin') {
-            extractZip(ffmpegDest, TAURI_BIN_DIR);
-            // Usually just ffmpeg binary in zip
-            const ffmpegPath = path.join(TAURI_BIN_DIR, 'ffmpeg');
-            if (fs.existsSync(ffmpegPath)) {
-                fs.renameSync(ffmpegPath, path.join(TAURI_BIN_DIR, `ffmpeg-${targetTriple}`));
-                fs.chmodSync(path.join(TAURI_BIN_DIR, `ffmpeg-${targetTriple}`), 0o755);
+                 // Cleanup Mac
+                 console.log('Cleaning up FFmpeg temporary files...');
+                 fs.unlinkSync(ffmpegDest);
             }
-        }
 
-    } catch (e) {
-        console.error('Error downloading/extracting FFmpeg:', e);
+        } catch (e) {
+            console.error('Error downloading/extracting FFmpeg:', e);
+        }
     }
   }
 
   // 2. Download VLC
-  if (platform === 'win32' && VLC_URLS.win32) {
-      console.log('Downloading VLC for Windows bundling...');
-      const vlcDest = path.join(TAURI_VLC_DIR, 'vlc.zip');
-      try {
-          await downloadFile(VLC_URLS.win32, vlcDest);
-          console.log('VLC downloaded. Extracting...');
-          extractZip(vlcDest, TAURI_VLC_DIR);
+  // Check if VLC exists (simple check if vlc dir is not empty?)
+  // But for Win/Mac we unzip/copy.
+  // We can check if a key file exists.
+  const vlcCheckPath = platform === 'win32'
+      ? path.join(TAURI_VLC_DIR, 'vlc.exe')
+      : (platform === 'darwin' ? path.join(TAURI_VLC_DIR, 'VLC.app') : null);
 
-          const vlcExtractDir = path.join(TAURI_VLC_DIR, 'vlc-3.0.20-win64');
-          if (fs.existsSync(vlcExtractDir)) {
-              const files = fs.readdirSync(vlcExtractDir);
-              files.forEach(file => {
-                  const src = path.join(vlcExtractDir, file);
-                  const dest = path.join(TAURI_VLC_DIR, file);
-                  fs.renameSync(src, dest);
-              });
-              fs.rmdirSync(vlcExtractDir);
-          }
-          console.log('VLC setup complete.');
-      } catch (e) {
-          console.error('Error with VLC (Win32):', e);
-      }
-  } else if (platform === 'darwin' && VLC_URLS.darwin) {
-      console.log('Downloading VLC for macOS bundling...');
-      const vlcDest = path.join(TAURI_VLC_DIR, 'vlc.dmg');
-      try {
-          await downloadFile(VLC_URLS.darwin, vlcDest);
-          console.log('VLC downloaded.');
-
-          // MacOS DMG mounting requires hdiutil, which is only on macOS
-          console.log('Attempting to extract DMG (only works on macOS)...');
-
-          try {
-            await execAsync(`hdiutil attach "${vlcDest}" -nobrowse -mountpoint /Volumes/VLC`);
-            console.log('DMG mounted. Copying VLC.app...');
-
-            await execAsync(`cp -R /Volumes/VLC/VLC.app "${TAURI_VLC_DIR}/"`);
-            console.log('VLC.app copied successfully.');
-
-            await execAsync(`hdiutil detach /Volumes/VLC`);
-            console.log('DMG detached.');
-          } catch (err) {
-             console.error('Failed during DMG operations (ignorable if not on macOS):', err);
-             // attempt force detach if failed midway
-             exec(`hdiutil detach /Volumes/VLC`).catch(() => {});
-          }
-
-      } catch (e) {
-           console.error('Error with VLC (Darwin):', e);
-      }
+  if (vlcCheckPath && fs.existsSync(vlcCheckPath)) {
+      console.log('VLC already exists. Skipping download.');
   } else {
-      console.log(`Skipping VLC download for ${platform}. Linux uses system dependencies.`);
+      if (platform === 'win32' && VLC_URLS.win32) {
+          console.log('Downloading VLC for Windows bundling...');
+          const vlcDest = path.join(TAURI_VLC_DIR, 'vlc.zip');
+          try {
+              await downloadFile(VLC_URLS.win32, vlcDest);
+              console.log('VLC downloaded. Extracting...');
+              extractZip(vlcDest, TAURI_VLC_DIR);
+
+              const vlcExtractDir = path.join(TAURI_VLC_DIR, 'vlc-3.0.20-win64');
+              if (fs.existsSync(vlcExtractDir)) {
+                  const files = fs.readdirSync(vlcExtractDir);
+                  files.forEach(file => {
+                      const src = path.join(vlcExtractDir, file);
+                      const dest = path.join(TAURI_VLC_DIR, file);
+                      fs.renameSync(src, dest);
+                  });
+                  fs.rmdirSync(vlcExtractDir);
+              }
+              console.log('VLC setup complete.');
+              // Cleanup
+              fs.unlinkSync(vlcDest);
+          } catch (e) {
+              console.error('Error with VLC (Win32):', e);
+          }
+      } else if (platform === 'darwin' && VLC_URLS.darwin) {
+          console.log('Downloading VLC for macOS bundling...');
+          const vlcDest = path.join(TAURI_VLC_DIR, 'vlc.dmg');
+          try {
+              await downloadFile(VLC_URLS.darwin, vlcDest);
+              console.log('VLC downloaded.');
+
+              // MacOS DMG mounting requires hdiutil, which is only on macOS
+              console.log('Attempting to extract DMG (only works on macOS)...');
+
+              try {
+                await execAsync(`hdiutil attach "${vlcDest}" -nobrowse -mountpoint /Volumes/VLC`);
+                console.log('DMG mounted. Copying VLC.app...');
+
+                await execAsync(`cp -R /Volumes/VLC/VLC.app "${TAURI_VLC_DIR}/"`);
+                console.log('VLC.app copied successfully.');
+
+                await execAsync(`hdiutil detach /Volumes/VLC`);
+                console.log('DMG detached.');
+                // Cleanup
+                fs.unlinkSync(vlcDest);
+              } catch (err) {
+                 console.error('Failed during DMG operations (ignorable if not on macOS):', err);
+                 // attempt force detach if failed midway
+                 exec(`hdiutil detach /Volumes/VLC`).catch(() => {});
+              }
+
+          } catch (e) {
+               console.error('Error with VLC (Darwin):', e);
+          }
+      } else {
+          console.log(`Skipping VLC download for ${platform}. Linux uses system dependencies.`);
+      }
   }
 }
 
