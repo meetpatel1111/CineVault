@@ -19,8 +19,8 @@
         "sidecar": true,
         "execute": true,
         "scope": [
-          { "name": "bin/ffmpeg", "sidecar": true, "args": true },
-          { "name": "bin/ffprobe", "sidecar": true, "args": true }
+          { "name": "ffmpeg", "sidecar": true, "args": true },
+          { "name": "ffprobe", "sidecar": true, "args": true }
         ]
       },
       "fs": {
@@ -57,8 +57,8 @@
         "icons/icon.png"
       ],
       "externalBin": [
-        "bin/ffmpeg",
-        "bin/ffprobe"
+        "ffmpeg",
+        "ffprobe"
       ],
       "resources": [
         "vlc"
