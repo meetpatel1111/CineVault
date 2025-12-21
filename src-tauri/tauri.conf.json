@@ -15,7 +15,13 @@
       "all": false,
       "shell": {
         "all": false,
-        "open": true
+        "open": true,
+        "sidecar": true,
+        "execute": true,
+        "scope": [
+          { "name": "bin/ffmpeg", "sidecar": true, "args": true },
+          { "name": "bin/ffprobe", "sidecar": true, "args": true }
+        ]
       },
       "fs": {
         "all": true,
@@ -49,7 +55,17 @@
         "icons/128x128.png",
         "icons/128x128@2x.png",
         "icons/icon.png"
-      ]
+      ],
+      "externalBin": [
+        "bin/ffmpeg",
+        "bin/ffprobe"
+      ],
+      "resources": [
+        "vlc"
+      ],
+      "deb": {
+        "depends": ["curl", "libwebkit2gtk-4.0-37", "libgtk-3-0", "libappindicator3-1", "libvlc5", "vlc", "ffmpeg"]
+      }
     },
     "security": {
       "csp": null

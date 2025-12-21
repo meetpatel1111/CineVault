@@ -927,6 +927,64 @@ struct DependencyStatus {
 }
 
 fn main() {
+    // Set up VLC environment variables for Windows bundling
+    #[cfg(target_os = "windows")]
+    {
+        use std::env;
+        // Try to find the bundled VLC directory relative to the executable
+        if let Ok(exe_path) = env::current_exe() {
+            if let Some(exe_dir) = exe_path.parent() {
+                let vlc_path = exe_dir.join("vlc");
+                if vlc_path.exists() {
+                     let path_var = env::var_os("PATH").unwrap_or_default();
+                     let mut paths = env::split_paths(&path_var).collect::<Vec<_>>();
+                     paths.push(vlc_path.clone());
+                     if let Ok(new_path) = env::join_paths(paths) {
+                         env::set_var("PATH", new_path);
+                     }
+                     // Also set VLC_PLUGIN_PATH
+                     env::set_var("VLC_PLUGIN_PATH", vlc_path.join("plugins"));
+                }
+            }
+        }
+    }
+
+    // Set up VLC environment variables for macOS bundling
+    #[cfg(target_os = "macos")]
+    {
+        use std::env;
+        if let Ok(exe_path) = env::current_exe() {
+            // macOS bundle structure: App.app/Contents/MacOS/App
+            // Resources are in App.app/Contents/Resources
+            // We bundled vlc/** into Resources/vlc/
+            // The logic depends on where tauri puts resources.
+            // Usually ../Resources/vlc
+
+            if let Some(macos_dir) = exe_path.parent() {
+                 if let Some(contents_dir) = macos_dir.parent() {
+                     let resources_dir = contents_dir.join("Resources");
+                     let vlc_app_path = resources_dir.join("vlc").join("VLC.app");
+
+                     // vlc-rs needs libvlc.dylib. In VLC.app it is in Contents/MacOS/lib
+                     let vlc_lib_path = vlc_app_path.join("Contents").join("MacOS").join("lib");
+                     let vlc_plugins_path = vlc_app_path.join("Contents").join("MacOS").join("plugins");
+
+                     if vlc_lib_path.exists() {
+                         // DYLD_LIBRARY_PATH might be restricted by SIP, but we can try setting it or VLC_PLUGIN_PATH
+                         // vlc-rs might dlopen manually if we configure it, or rely on system paths.
+                         // But setting VLC_PLUGIN_PATH is definitely needed.
+                         env::set_var("VLC_PLUGIN_PATH", vlc_plugins_path);
+
+                         // Also might need to add to DYLD_LIBRARY_PATH for the process if possible,
+                         // but usually that has to be done before launch.
+                         // However, vlc-rs might search in standard locations.
+                         // We can also try setting specific env var if the crate supports it.
+                     }
+                 }
+            }
+        }
+    }
+
     // Initialize database
     let app_data_dir = tauri::api::path::app_data_dir(&tauri::Config::default())
         .expect("Failed to get app data directory");

@@ -8,6 +8,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "deps": "node scripts/download-deps.cjs",
+    "prebuild": "npm run deps",
+    "predev": "npm run deps",
     "generate-icons": "node tmp_rovodev_generate_icons.js",
     "generate-icns": "node tmp_rovodev_generate_icns.js",
     "generate-all-icons": "npm run generate-icons && npm run generate-icns"
@@ -24,6 +27,7 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",
+    "adm-zip": "^0.5.16",
     "sharp": "^0.34.5",
     "typescript": "^5.3.3",
     "vite": "^5.0.11"
