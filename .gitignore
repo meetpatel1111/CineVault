@@ -62,8 +62,6 @@ Cargo.lock
 /src-tauri/gen
 /src-tauri/bin/
 /src-tauri/vlc/
-/src-tauri/ffmpeg-*
-/src-tauri/ffprobe-*
 
 # Database files (local development)
 *.db

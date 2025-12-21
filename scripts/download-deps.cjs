@@ -7,11 +7,11 @@ const { exec } = require('child_process');
 const platform = process.platform;
 const arch = process.arch;
 
-const TAURI_DIR = path.join(__dirname, '../src-tauri');
+const TAURI_BIN_DIR = path.join(__dirname, '../src-tauri/bin');
 const TAURI_VLC_DIR = path.join(__dirname, '../src-tauri/vlc');
 
 // Ensure directories exist
-if (!fs.existsSync(TAURI_DIR)) fs.mkdirSync(TAURI_DIR, { recursive: true });
+if (!fs.existsSync(TAURI_BIN_DIR)) fs.mkdirSync(TAURI_BIN_DIR, { recursive: true });
 if (!fs.existsSync(TAURI_VLC_DIR)) fs.mkdirSync(TAURI_VLC_DIR, { recursive: true });
 
 function downloadFile(url, dest) {
@@ -92,8 +92,8 @@ async function main() {
   const ffmpegName = platform === 'win32' ? `ffmpeg-${targetTriple}.exe` : `ffmpeg-${targetTriple}`;
   const ffprobeName = platform === 'win32' ? `ffprobe-${targetTriple}.exe` : `ffprobe-${targetTriple}`;
 
-  const ffmpegFinalPath = path.join(TAURI_DIR, ffmpegName);
-  const ffprobeFinalPath = path.join(TAURI_DIR, ffprobeName);
+  const ffmpegFinalPath = path.join(TAURI_BIN_DIR, ffmpegName);
+  const ffprobeFinalPath = path.join(TAURI_BIN_DIR, ffprobeName);
 
   // 1. Download FFmpeg
   if (FFMPEG_URLS[platform]) {
@@ -104,8 +104,7 @@ async function main() {
         console.log('Downloading FFmpeg...');
         const ffmpegUrl = FFMPEG_URLS[platform];
         const ffmpegExt = platform === 'linux' ? '.tar.xz' : '.zip';
-        // Download to src-tauri root temporarily
-        const ffmpegDest = path.join(TAURI_DIR, `ffmpeg_temp${ffmpegExt}`);
+        const ffmpegDest = path.join(TAURI_BIN_DIR, `ffmpeg${ffmpegExt}`);
 
         try {
             await downloadFile(ffmpegUrl, ffmpegDest);
@@ -113,15 +112,11 @@ async function main() {
 
             if (platform === 'linux') {
                 // Use tar for linux
-                // Extract to a temp subdir to avoid cluttering src-tauri
-                const tempExtractDir = path.join(TAURI_DIR, 'ffmpeg_extract_temp');
-                if (!fs.existsSync(tempExtractDir)) fs.mkdirSync(tempExtractDir);
-
-                await execAsync(`tar -xf ${ffmpegDest} -C ${tempExtractDir}`);
+                await execAsync(`tar -xf ${ffmpegDest} -C ${TAURI_BIN_DIR}`);
 
                 // Find the binary and move/rename it
-                const stdout = await execAsync(`find ${tempExtractDir} -name "ffmpeg" -type f`);
-                const ffmpegPath = stdout.trim().split('\n')[0];
+                const stdout = await execAsync(`find ${TAURI_BIN_DIR} -name "ffmpeg" -type f`);
+                const ffmpegPath = stdout.trim().split('\n')[0]; // take first match if multiple (unlikely)
                 if (!ffmpegPath) throw new Error('Could not find ffmpeg binary');
 
                 fs.renameSync(ffmpegPath, ffmpegFinalPath);
@@ -130,7 +125,7 @@ async function main() {
 
                 // Also ffprobe
                 try {
-                    const stdout2 = await execAsync(`find ${tempExtractDir} -name "ffprobe" -type f`);
+                    const stdout2 = await execAsync(`find ${TAURI_BIN_DIR} -name "ffprobe" -type f`);
                     const ffprobePath = stdout2.trim().split('\n')[0];
                     if(ffprobePath) {
                         fs.renameSync(ffprobePath, ffprobeFinalPath);
@@ -143,12 +138,15 @@ async function main() {
                 // Cleanup Linux
                 console.log('Cleaning up FFmpeg temporary files...');
                 fs.unlinkSync(ffmpegDest); // delete tar.xz
-                exec(`rm -rf "${tempExtractDir}"`, (err) => { if(err) console.error(err); });
+                if (ffmpegPath) {
+                    const extractedDir = path.dirname(ffmpegPath);
+                    if (extractedDir.includes(TAURI_BIN_DIR) && extractedDir !== TAURI_BIN_DIR) {
+                         exec(`rm -rf "${extractedDir}"`, (err) => { if(err) console.error(err); });
+                    }
+                }
 
             } else if (platform === 'win32') {
-                 const tempExtractDir = path.join(TAURI_DIR, 'ffmpeg_extract_temp');
-                 if (!fs.existsSync(tempExtractDir)) fs.mkdirSync(tempExtractDir);
-                 extractZip(ffmpegDest, tempExtractDir);
+                extractZip(ffmpegDest, TAURI_BIN_DIR);
 
                 // Simple recursive find helper
                 function findFile(dir, name) {
@@ -166,8 +164,8 @@ async function main() {
                     return null;
                 }
 
-                const ffmpegExe = findFile(tempExtractDir, 'ffmpeg.exe');
-                const ffprobeExe = findFile(tempExtractDir, 'ffprobe.exe');
+                const ffmpegExe = findFile(TAURI_BIN_DIR, 'ffmpeg.exe');
+                const ffprobeExe = findFile(TAURI_BIN_DIR, 'ffprobe.exe');
 
                 if (ffmpegExe) {
                     fs.renameSync(ffmpegExe, ffmpegFinalPath);
@@ -181,31 +179,29 @@ async function main() {
                 // Cleanup Windows
                  console.log('Cleaning up FFmpeg temporary files...');
                  fs.unlinkSync(ffmpegDest); // delete zip
-                 try {
-                    fs.rmSync(tempExtractDir, { recursive: true, force: true });
-                 } catch(e) {
-                     console.error("Cleanup failed", e);
+                 if (ffmpegExe) {
+                     const extractedDir = path.dirname(ffmpegExe);
+                     if (extractedDir !== TAURI_BIN_DIR && extractedDir.startsWith(TAURI_BIN_DIR)) {
+                         try {
+                            fs.rmSync(extractedDir, { recursive: true, force: true });
+                         } catch(e) {
+                             console.error("Cleanup failed", e);
+                         }
+                     }
                  }
 
             } else if (platform === 'darwin') {
-                const tempExtractDir = path.join(TAURI_DIR, 'ffmpeg_extract_temp');
-                if (!fs.existsSync(tempExtractDir)) fs.mkdirSync(tempExtractDir);
-                extractZip(ffmpegDest, tempExtractDir);
-
-                const extractedFfmpeg = path.join(tempExtractDir, 'ffmpeg');
-                if (fs.existsSync(extractedFfmpeg)) {
-                    fs.renameSync(extractedFfmpeg, ffmpegFinalPath);
+                extractZip(ffmpegDest, TAURI_BIN_DIR);
+                // Usually just ffmpeg binary in zip
+                const ffmpegPath = path.join(TAURI_BIN_DIR, 'ffmpeg');
+                if (fs.existsSync(ffmpegPath)) {
+                    fs.renameSync(ffmpegPath, ffmpegFinalPath);
                     fs.chmodSync(ffmpegFinalPath, 0o755);
                 }
 
                  // Cleanup Mac
                  console.log('Cleaning up FFmpeg temporary files...');
                  fs.unlinkSync(ffmpegDest);
-                 try {
-                    fs.rmSync(tempExtractDir, { recursive: true, force: true });
-                 } catch(e) {
-                     console.error("Cleanup failed", e);
-                 }
             }
 
         } catch (e) {
