@@ -60,8 +60,6 @@ Cargo.lock
 /src-tauri/target
 /src-tauri/WixTools
 /src-tauri/gen
-/src-tauri/bin/
-/src-tauri/vlc/
 
 # Database files (local development)
 *.db
